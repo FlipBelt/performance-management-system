@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: performance-management-system
+    runtime: docker
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATA_DIR
+        value: /var/data
+      - key: DINGTALK_APP_KEY
+        sync: false
+      - key: DINGTALK_APP_SECRET
+        sync: false
+      - key: DINGTALK_ROBOT_CODE
+        sync: false
+      - key: PUBLIC_SERVER_URL
+        sync: false
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: LINK_SIGNING_SECRET
+        generateValue: true
+    disk:
+      name: performance-data
+      mountPath: /var/data
+      sizeGB: 1

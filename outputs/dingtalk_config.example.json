@@ -1,0 +1,17 @@
+{
+  "appId": "填写自建应用 App ID",
+  "appKey": "填写企业内部应用 AppKey",
+  "appSecret": "填写企业内部应用 AppSecret",
+  "corpId": "填写企业 CorpId",
+  "agentId": 0,
+  "robotCode": "可选：应用机器人 RobotCode",
+  "publicBaseUrl": "https://example.com",
+  "oaApproval": {
+    "enabled": true,
+    "processName": "绩效奖金审批",
+    "processCode": "填写审批流程 ProcessCode",
+    "agentId": 0,
+    "originatorUserId": "填写审批发起人 UserId",
+    "originatorDeptId": -1
+  }
+}

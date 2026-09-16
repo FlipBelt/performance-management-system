@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>绩效自评 - 桑葚（於思旭）</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 16px; color: #1a1a1a; }
+  .container { max-width: 640px; margin: 0 auto; }
+  .header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: white; padding: 24px; border-radius: 16px 16px 0 0; text-align: center; }
+  .header h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .header p { font-size: 13px; opacity: 0.85; }
+  .header .stage { display: inline-block; margin-top: 8px; padding: 4px 14px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 13px; }
+  .card { background: white; border-radius: 0 0 16px 16px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .emp-info { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f8f9fa; border-radius: 10px; margin-bottom: 16px; font-size: 14px; }
+  .emp-info .name { font-weight: 600; }
+  .emp-info .dept { color: #666; font-size: 13px; }
+  .section-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #1a73e8; }
+  .kpi-item { border: 1px solid #e8eaed; border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: all 0.2s; }
+  .kpi-item:hover { border-color: #c5cad0; }
+  .kpi-item.filled { border-color: #86efac; background: #f0fdf4; }
+  .kpi-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .kpi-num { width: 28px; height: 28px; background: #dbeafe; color: #1d4ed8; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; margin-right: 10px; }
+  .kpi-title { font-weight: 600; font-size: 15px; flex: 1; }
+  .kpi-weight { background: #eff6ff; color: #1a73e8; font-weight: 600; padding: 3px 10px; border-radius: 6px; font-size: 13px; white-space: nowrap; }
+  .kpi-target { font-size: 13px; color: #555; margin-bottom: 8px; padding-left: 38px; }
+  .kpi-rules { font-size: 12px; color: #888; padding: 8px 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; white-space: pre-line; line-height: 1.8; }
+  .kpi-completion { margin: 0 0 10px 38px; }
+  .kpi-completion label { font-size: 13px; font-weight: 500; color: #333; display: block; margin-bottom: 4px; }
+  .kpi-completion textarea { width: 100%; padding: 8px 12px; border: 2px solid #d0d5dd; border-radius: 8px; font-size: 13px; font-family: inherit; resize: vertical; outline: none; transition: all 0.2s; min-height: 60px; }
+  .kpi-completion textarea:focus { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,0.15); }
+  .kpi-score-row { display: flex; align-items: center; gap: 10px; padding-left: 38px; }
+  .kpi-score-row label { font-size: 14px; font-weight: 500; color: #333; }
+  .score-input { width: 80px; padding: 8px 12px; border: 2px solid #d0d5dd; border-radius: 8px; font-size: 16px; font-weight: 600; text-align: center; outline: none; transition: all 0.2s; }
+  .score-input:focus { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,0.15); }
+  .score-input.filled { border-color: #16a34a; background: #f0fdf4; }
+  .score-max { font-size: 12px; color: #999; }
+  .total-bar { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: #f8f9fa; border-radius: 12px; margin: 20px 0; border: 2px solid #e8eaed; }
+  .total-bar .label { font-size: 15px; font-weight: 600; }
+  .total-bar .value { font-size: 24px; font-weight: 700; color: #1a73e8; }
+  .total-bar .value.complete { color: #16a34a; }
+  .provisional-grade { margin-top: 4px; color: #2563eb; font-size: 13px; font-weight: 700; text-align: right; }
+  .submit-section { text-align: center; margin-top: 20px; }
+  .btn-submit { padding: 14px 40px; background: #1a73e8; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-submit:hover { background: #1557b0; }
+  .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+  .btn-submit.submitted { background: #16a34a; }
+  .submit-hint { font-size: 12px; color: #999; margin-top: 8px; }
+  .result-box { display: none; margin-top: 20px; padding: 24px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; text-align: center; }
+  .result-box .icon { font-size: 40px; margin-bottom: 8px; }
+  .result-box .msg { font-size: 15px; color: #166534; font-weight: 500; }
+  .result-box .detail { font-size: 13px; color: #555; margin-top: 8px; line-height: 1.8; }
+  .result-box .time { font-size: 12px; color: #999; margin-top: 10px; }
+  .footer { text-align: center; margin-top: 16px; font-size: 12px; color: #bbb; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>绩效自评</h1>
+    <p>杭州飞途行远 · 2026年7月</p>
+    <div class="stage">当前环节：待自评</div>
+  </div>
+  <div class="card">
+    <div class="emp-info">
+      <div>
+        <div class="name">桑葚（於思旭）</div>
+        <div class="dept">人事行政部 · 人事行政专员</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;color:#999">直属上级</div>
+        <div style="font-weight:500">十叶</div>
+      </div>
+    </div>
+
+    <div class="section-title">KPI考核指标与评分</div>
+
+    <!-- KPI 1 -->
+    <div class="kpi-item" id="kpi1">
+      <div class="kpi-head">
+        <div class="kpi-num">1</div>
+        <div class="kpi-title">招聘完成率</div>
+        <div class="kpi-weight">30%</div>
+      </div>
+      <div class="kpi-target">目标值：月度招聘计划完成率>=95%</div>
+      <div class="kpi-rules">95%以上: 30分
+85%-95%: 22分
+70%-85%: 15分
+50%-70%: 8分
+50%以下: 0分</div>
+      <div class="kpi-completion">
+        <label>实际完成情况</label>
+        <textarea id="completion1" placeholder="请描述本项指标的实际完成情况"></textarea>
+      </div>
+      <div class="kpi-score-row">
+        <label>自评分：</label>
+        <input type="number" class="score-input" id="score1" min="0" max="30" step="1" inputmode="numeric" placeholder="整数" oninput="updateTotal()">
+        <span class="score-max">满分 30 分</span>
+      </div>
+    </div>
+
+    <!-- KPI 2 -->
+    <div class="kpi-item" id="kpi2">
+      <div class="kpi-head">
+        <div class="kpi-num">2</div>
+        <div class="kpi-title">员工入职办理</div>
+        <div class="kpi-weight">25%</div>
+      </div>
+      <div class="kpi-target">目标值：入职办理及时率100%，零差错</div>
+      <div class="kpi-rules">及时准确无差错: 25分
+偶有延迟: 18分
+1次差错: 10分
+2次以上差错: 0分</div>
+      <div class="kpi-completion">
+        <label>实际完成情况</label>
+        <textarea id="completion2" placeholder="请描述本项指标的实际完成情况"></textarea>
+      </div>
+      <div class="kpi-score-row">
+        <label>自评分：</label>
+        <input type="number" class="score-input" id="score2" min="0" max="25" step="1" inputmode="numeric" placeholder="整数" oninput="updateTotal()">
+        <span class="score-max">满分 25 分</span>
+      </div>
+    </div>
+
+    <!-- KPI 3 -->
+    <div class="kpi-item" id="kpi3">
+      <div class="kpi-head">
+        <div class="kpi-num">3</div>
+        <div class="kpi-title">行政事务协调</div>
+        <div class="kpi-weight">20%</div>
+      </div>
+      <div class="kpi-target">目标值：行政事务响应及时，协调顺畅</div>
+      <div class="kpi-rules">协调高效无投诉: 20分
+基本完成: 14分
+偶有延误: 8分
+严重影响: 0分</div>
+      <div class="kpi-completion">
+        <label>实际完成情况</label>
+        <textarea id="completion3" placeholder="请描述本项指标的实际完成情况"></textarea>
+      </div>
+      <div class="kpi-score-row">
+        <label>自评分：</label>
+        <input type="number" class="score-input" id="score3" min="0" max="20" step="1" inputmode="numeric" placeholder="整数" oninput="updateTotal()">
+        <span class="score-max">满分 20 分</span>
+      </div>
+    </div>
+
+    <!-- KPI 4 -->
+    <div class="kpi-item" id="kpi4">
+      <div class="kpi-head">
+        <div class="kpi-num">4</div>
+        <div class="kpi-title">考勤与绩效管理</div>
+        <div class="kpi-weight">15%</div>
+      </div>
+      <div class="kpi-target">目标值：月度考勤统计准确率100%</div>
+      <div class="kpi-rules">数据统计准确及时: 15分
+偶有延迟: 10分
+出现错误: 5分
+严重影响: 0分</div>
+      <div class="kpi-completion">
+        <label>实际完成情况</label>
+        <textarea id="completion4" placeholder="请描述本项指标的实际完成情况"></textarea>
+      </div>
+      <div class="kpi-score-row">
+        <label>自评分：</label>
+        <input type="number" class="score-input" id="score4" min="0" max="15" step="1" inputmode="numeric" placeholder="整数" oninput="updateTotal()">
+        <span class="score-max">满分 15 分</span>
+      </div>
+    </div>
+
+    <!-- KPI 5 -->
+    <div class="kpi-item" id="kpi5">
+      <div class="kpi-head">
+        <div class="kpi-num">5</div>
+        <div class="kpi-title">制度执行与合规</div>
+        <div class="kpi-weight">10%</div>
+      </div>
+      <div class="kpi-target">目标值：人事制度执行到位，合规零违规</div>
+      <div class="kpi-rules">制度执行到位且合规: 10分
+基本执行: 7分
+部分违规: 3分
+严重违规: 0分</div>
+      <div class="kpi-completion">
+        <label>实际完成情况</label>
+        <textarea id="completion5" placeholder="请描述本项指标的实际完成情况"></textarea>
+      </div>
+      <div class="kpi-score-row">
+        <label>自评分：</label>
+        <input type="number" class="score-input" id="score5" min="0" max="10" step="1" inputmode="numeric" placeholder="整数" oninput="updateTotal()">
+        <span class="score-max">满分 10 分</span>
+      </div>
+    </div>
+
+    <!-- Total Score -->
+    <div class="total-bar">
+      <div class="label">自评总分</div>
+      <div><div class="value" id="totalScore">--</div><div class="provisional-grade" id="selfProvisionalGrade">等级：--（待核定）</div></div>
+    </div>
+
+    <!-- Submit -->
+    <div class="submit-section">
+      <button class="btn-submit" id="btnSubmit" disabled onclick="submitSelfEval()">提交自评</button>
+      <div class="submit-hint">请填写所有指标的自评分后提交</div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-box" id="resultBox">
+      <div class="icon">&#10003;</div>
+      <div class="msg">自评已提交成功！</div>
+      <div class="detail" id="resultDetail"></div>
+      <div class="time" id="resultTime"></div>
+    </div>
+  </div>
+  <div class="footer">杭州飞途行远 · 绩效管理系统</div>
+</div>
+
+<script>
+const EMP = { empId: "E004", name: "桑葚", realName: "於思旭", dept: "人事行政部", position: "人事行政专员", directMgr: "桑葚", month: "2026年7月" };
+const KPIS = [
+  { seq: 1, indicator: "招聘完成率", max: 30 },
+  { seq: 2, indicator: "员工入职办理", max: 25 },
+  { seq: 3, indicator: "行政事务协调", max: 20 },
+  { seq: 4, indicator: "考勤与绩效管理", max: 15 },
+  { seq: 5, indicator: "制度执行与合规", max: 10 }
+];
+const SERVER_URL = "http://localhost:18080";
+
+function gradeForScore(score) {
+  if (score > 110) return 'A-';
+  if (score > 100) return 'B+';
+  if (score > 90) return 'B';
+  if (score > 80) return 'B-';
+  if (score > 70) return 'C';
+  return 'D';
+}
+
+function updateTotal() {
+  let total = 0;
+  let allFilled = true;
+  for (let i = 1; i <= 5; i++) {
+    const input = document.getElementById('score' + i);
+    const val = input.value.trim();
+    const kpiItem = document.getElementById('kpi' + i);
+    if (val === '') {
+      allFilled = false;
+      input.classList.remove('filled');
+      kpiItem.classList.remove('filled');
+    } else {
+      const num = Number(val);
+      if (Number.isInteger(num) && num >= 0 && num <= KPIS[i-1].max) {
+        total += num;
+        input.classList.add('filled');
+        kpiItem.classList.add('filled');
+      } else {
+        allFilled = false;
+        input.classList.remove('filled');
+        kpiItem.classList.remove('filled');
+      }
+    }
+  }
+  const totalEl = document.getElementById('totalScore');
+  totalEl.textContent = allFilled ? total + ' 分' : '--';
+  totalEl.className = 'value' + (allFilled ? ' complete' : '');
+  document.getElementById('selfProvisionalGrade').textContent = '等级：' + (allFilled ? gradeForScore(total) : '--') + '（待核定）';
+  document.getElementById('btnSubmit').disabled = !allFilled;
+}
+
+function submitSelfEval() {
+  var scores = [];
+  var total = 0;
+  for (var i = 1; i <= 5; i++) {
+    var val = Number(document.getElementById('score' + i).value);
+    if (!Number.isInteger(val) || val < 0) { alert('第' + i + '项自评分必须是大于或等于0的整数'); return; }
+    var completionEl = document.getElementById('completion' + i);
+    var completion = completionEl ? completionEl.value.trim() : '';
+    scores.push({ seq: i, indicator: KPIS[i-1].indicator, score: val, max: KPIS[i-1].max, completion: completion });
+    total += val;
+  }
+
+  var now = new Date();
+  var timeStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+  // Build the DingTalk message text
+  var msgText = '\u3010\u7ee9\u6548\u81ea\u8bc4\u5b8c\u6210\u3011\n';
+  msgText += '\u5458\u5de5\uff1a' + EMP.name + '\uff08' + EMP.realName + '\uff09\n';
+  msgText += '\u90e8\u95e8\uff1a' + EMP.dept + '\n';
+  msgText += '\u6708\u4efd\uff1a' + EMP.month + '\n';
+  msgText += '\u81ea\u8bc4\u603b\u5206\uff1a' + total + ' \u5206\n\n';
+  msgText += '\u660e\u7ec6\uff1a\n';
+  for (var j = 0; j < scores.length; j++) {
+    msgText += (j+1) + '. ' + scores[j].indicator + '\uff1a' + scores[j].score + '/' + scores[j].max + ' \u5206\n';
+  }
+  msgText += '\n\u63d0\u4ea4\u65f6\u95f4\uff1a' + timeStr;
+
+  // Try to copy to clipboard
+  try {
+    navigator.clipboard.writeText(msgText);
+  } catch(e) {}
+
+  // POST to server for auto-import
+  try {
+    fetch(SERVER_URL + '/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ empId: EMP.empId, name: EMP.name, realName: EMP.realName, dept: EMP.dept, position: EMP.position, directMgr: EMP.directMgr, month: EMP.month, selfScore: total, scores: scores, submittedAt: timeStr, stage: "待自评" })
+    }).then(r => r.json()).then(result => {
+      if (result.success) console.log('\u5df2\u63d0\u4ea4\u5230\u670d\u52a1\u5668');
+    }).catch(e => console.warn('\u670d\u52a1\u5668\u4e0d\u53ef\u7528', e));
+  } catch(e) {}
+
+  try {
+    localStorage.setItem('kpi_selfeval_' + EMP.empId, JSON.stringify({
+      empId: EMP.empId, name: EMP.name, realName: EMP.realName,
+      dept: EMP.dept, month: EMP.month, selfScore: total,
+      scores: scores, submittedAt: timeStr, stage: "\u5f85\u81ea\u8bc4"
+    }));
+  } catch(e) {}
+
+  // Show result
+  var detailHtml = '<strong style="font-size:18px;color:#166534">\u81ea\u8bc4\u603b\u5206\uff1a' + total + ' \u5206</strong><br><span style="font-weight:700;color:#2563eb">等级：' + gradeForScore(total) + '（待核定）</span><br><small style="color:#64748b">最终分数和等级以BP核准结果为准</small><br><br>';
+  detailHtml += '<div style="text-align:left;padding:12px 16px;background:white;border-radius:8px;border:1px solid #d1d5db">';
+  for (var k = 0; k < scores.length; k++) {
+    var s = scores[k];
+    detailHtml += '<div style="display:flex;justify-content:space-between;padding:4px 0">';
+    detailHtml += '<span>' + s.indicator + '</span>';
+    detailHtml += '<span style="font-weight:600">' + s.score + '/' + s.max + '</span>';
+    detailHtml += '</div>';
+  }
+  detailHtml += '</div>';
+  detailHtml += '<div style="margin-top:16px;padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:13px;color:#92400e">';
+  detailHtml += '\u8bc4\u5206\u7ed3\u679c\u5df2\u590d\u5236\u5230\u526a\u8d34\u677f\uff0c\u8bf7\u70b9\u51fb\u4e0b\u65b9\u6309\u94ae\u53d1\u9001\u7ed9HR\u3002';
+  detailHtml += '</div>';
+  detailHtml += '<button onclick="sendToDingTalk()" style="margin-top:12px;padding:12px 24px;background:#1677ff;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;width:100%">\u901a\u8fc7\u9489\u9489\u53d1\u9001\u7ed9HR</button>';
+
+  document.getElementById('resultDetail').innerHTML = detailHtml;
+  document.getElementById('resultTime').textContent = '\u63d0\u4ea4\u65f6\u95f4\uff1a' + timeStr;
+  document.getElementById('resultBox').style.display = 'block';
+
+  var btn = document.getElementById('btnSubmit');
+  btn.textContent = '\u5df2\u63d0\u4ea4';
+  btn.disabled = true;
+  btn.classList.add('submitted');
+
+  for (var m = 1; m <= 5; m++) {
+    document.getElementById('score' + m).disabled = true;
+    var compEl = document.getElementById('completion' + m);
+    if (compEl) compEl.disabled = true;
+  }
+
+  document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth' });
+}
+
+function sendToDingTalk() {
+  try {
+    var msgText = '\u3010\u7ee9\u6548\u81ea\u8bc4\u5b8c\u6210\u3011\n';
+    msgText += '\u5458\u5de5\uff1a' + EMP.name + '\uff08' + EMP.realName + '\uff09\n';
+    msgText += '\u90e8\u95e8\uff1a' + EMP.dept + '\n';
+    msgText += '\u6708\u4efd\uff1a' + EMP.month + '\n';
+    msgText += '\u81ea\u8bc4\u603b\u5206\uff1a' + document.getElementById('totalScore').textContent + '\n\n';
+    for (var i = 1; i <= 5; i++) {
+      msgText += i + '. ' + KPIS[i-1].indicator + '\uff1a' + document.getElementById('score' + i).value + '/' + KPIS[i-1].max + ' \u5206\n';
+    }
+    navigator.clipboard.writeText(msgText);
+  } catch(e) {}
+  // Open DingTalk app
+  window.location.href = 'dingtalk://';
+}
+</script>
+</body>
+</html>

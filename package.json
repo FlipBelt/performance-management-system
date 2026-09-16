@@ -1,0 +1,14 @@
+{
+  "name": "performance-management-system",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node outputs/eval-server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}

@@ -1,0 +1,37 @@
+# This repository intentionally publishes source only. Runtime data, local
+# credentials, generated archives, browser profiles and maintenance scratch
+# files remain outside version control.
+*
+
+!.gitignore
+!.dockerignore
+!.env.deploy.example
+!Dockerfile
+!DEPLOYMENT.md
+!README.md
+!package.json
+!package-lock.json
+!render.yaml
+
+!outputs/
+outputs/*
+!outputs/eval-server.js
+!outputs/okr-module.js
+!outputs/dingtalk-directory.js
+!outputs/dingtalk-oa.js
+!outputs/dingtalk-sender.js
+!outputs/check-dingtalk-readiness.js
+!outputs/audit-production-readiness.js
+!outputs/production-readiness-migration.js
+!outputs/deploy-to-aliyun.ps1
+!outputs/deploy-to-aliyun.cmd
+!outputs/jxgl.flipbeltchina.com.nginx.conf
+!outputs/dingtalk_config.example.json
+!outputs/preview.html
+!outputs/绩效管理系统.html
+!outputs/KPI目标确认_桑葚.html
+!outputs/上级评分_桑葚.html
+!outputs/BP核准_桑葚.html
+!outputs/绩效结果确认书模板.html
+!outputs/绩效自评_桑葚.html
+!outputs/test-*.js

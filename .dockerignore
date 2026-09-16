@@ -1,0 +1,10 @@
+node_modules
+work
+uploads
+performance-system
+outputs/dingtalk_config.json
+outputs/pending_sends.json
+outputs/pending_notifications.json
+*.log
+.git
+.codex

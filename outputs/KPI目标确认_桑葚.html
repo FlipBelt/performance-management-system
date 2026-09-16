@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KPI目标确认 - 桑葚</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 16px; color: #1a1a1a; }
+  .container { max-width: 1120px; margin: 0 auto; }
+  .header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: white; padding: 24px; border-radius: 16px 16px 0 0; text-align: center; }
+  .header h1 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .header p { font-size: 13px; opacity: 0.85; }
+  .card { background: white; border-radius: 0 0 16px 16px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .emp-info { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f8f9fa; border-radius: 10px; margin-bottom: 20px; font-size: 14px; }
+  .emp-info .name { font-weight: 600; color: #1a1a1a; }
+  .emp-info .dept { color: #666; font-size: 13px; }
+  .section-title { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #1a73e8; }
+  .table-wrap { width: 100%; overflow-x: auto; border: 1px solid #dbeafe; border-radius: 10px; margin-bottom: 24px; }
+  table { width: 100%; min-width: 960px; table-layout: fixed; border-collapse: collapse; font-size: 14px; }
+  th { background: #f0f4ff; color: #1a73e8; font-weight: 600; padding: 12px 10px; text-align: left; border-bottom: 2px solid #d0d9f0; }
+  td { padding: 12px 10px; border-bottom: 1px solid #eee; vertical-align: top; line-height: 1.65; overflow-wrap: anywhere; }
+  tr:last-child td { border-bottom: none; }
+  .weight-cell { color: #1a73e8; font-weight: 600; white-space: nowrap; }
+  .target-cell { color: #333; }
+  .total-row { background: #f8f9fa; font-weight: 600; }
+  .total-row td { padding: 14px 10px; border-top: 2px solid #1a73e8; }
+  .sig-section { max-width: 760px; margin: 24px auto 0; }
+  .sig-entry { margin-top: 12px; padding: 14px; background: #f8fafc; border: 1px solid #dbeafe; border-radius: 10px; }
+  .sig-entry label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px; }
+  .sig-select { width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; font-size: 14px; color: #111827; outline: none; }
+  .sig-select:focus { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,.12); }
+  .sig-rule { margin-top: 7px; color: #64748b; font-size: 12px; line-height: 1.6; }
+  .sig-validation { min-height: 20px; margin-top: 7px; font-size: 12px; font-weight: 600; }
+  .sig-validation.valid { color: #15803d; }
+  .sig-validation.invalid { color: #dc2626; }
+  .sig-canvas-wrap { border: 2px dashed #d0d5dd; border-radius: 12px; padding: 8px; background: #fafbfc; position: relative; }
+  .sig-canvas-wrap canvas { width: 100%; height: 160px; display: block; cursor: crosshair; touch-action: none; border-radius: 8px; position:relative; z-index:2; }
+  .sig-char-guides { position:absolute; inset:8px; display:grid; pointer-events:none; z-index:1; border-radius:8px; overflow:hidden; }
+  .sig-char-guide { position:relative; border-right:1px dashed #cbd5e1; }
+  .sig-char-guide:last-child { border-right:none; }
+  .sig-char-guide span { position:absolute; top:6px; left:50%; transform:translateX(-50%); font-family:KaiTi,STKaiti,"楷体",serif; font-size:18px; color:#94a3b8; opacity:.75; }
+  .sig-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #bbb; font-size: 14px; pointer-events: none; }
+  .sig-actions { display: flex; gap: 10px; margin-top: 10px; justify-content: flex-end; }
+  .btn { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-clear { background: #f0f0f0; color: #666; }
+  .btn-clear:hover { background: #e0e0e0; }
+  .btn-confirm { background: #1a73e8; color: white; }
+  .btn-confirm:hover { background: #1557b0; }
+  .btn-confirm:disabled { background: #ccc; cursor: not-allowed; }
+  .share-box { padding: 12px 16px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; font-size: 13px; color: #1e40af; line-height: 1.6; }
+  .share-box .share-btn { display: inline-block; margin-top: 8px; padding: 8px 16px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .share-box .share-btn:hover { background: #1557b0; }
+  .share-box .fallback { margin-top: 8px; font-size: 12px; color: #666; }
+  .confirm-result { display: none; margin-top: 20px; padding: 20px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; text-align: center; }
+  .confirm-result .check { font-size: 36px; margin-bottom: 8px; }
+  .confirm-result .msg { font-size: 14px; color: #166534; }
+  .confirm-result .time { font-size: 12px; color: #666; margin-top: 6px; }
+  .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #999; }
+  .note { font-size: 12px; color: #888; margin-top: 8px; line-height: 1.6; }
+  .attendance-note { margin-top:24px; padding:14px 16px; background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; color:#7c2d12; font-size:12px; line-height:1.8; }
+  .attendance-note strong { display:block; margin-bottom:4px; color:#9a3412; }
+  .workflow-reminder-grid{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(0,1.35fr);gap:14px;margin:20px 0;align-items:stretch}
+  .rating-guide,.workflow-reminder-grid .attendance-note{margin:0;padding:15px 17px;border-radius:11px;font-size:12px;line-height:1.7}
+  .rating-guide{background:#f8fafc;border:1px solid #dbe3ee;color:#334155}
+  .rating-guide-title,.attendance-note-title{font-size:14px;font-weight:700;margin-bottom:8px;color:#0f172a}
+  .attendance-note-title{color:#9a3412}.rating-guide-list{display:grid}.rating-guide-row{display:grid;grid-template-columns:42px minmax(68px,1fr) auto;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid #e8edf3}.rating-guide-row:last-child{border-bottom:0}
+  .grade-chip{display:inline-flex;justify-content:center;align-items:center;min-width:34px;padding:1px 8px;border-radius:999px;font-weight:700;border:1px solid}.grade-a{color:#059669;background:#ecfdf5;border-color:#6ee7b7}.grade-b-plus{color:#2563eb;background:#eff6ff;border-color:#bfdbfe}.grade-b{color:#7c3aed;background:#f5f3ff;border-color:#ddd6fe}.grade-b-minus{color:#d97706;background:#fffbeb;border-color:#fde68a}.grade-c{color:#ea580c;background:#fff7ed;border-color:#fed7aa}.grade-d{color:#dc2626;background:#fef2f2;border-color:#fecaca}.rating-threshold{color:#64748b;text-align:right;white-space:nowrap}
+  @media(max-width:820px){.workflow-reminder-grid{grid-template-columns:1fr}.rating-guide-row{grid-template-columns:42px 1fr auto}}
+  .identity-panel { margin:14px 0; padding:14px 16px; border:1px solid #bfdbfe; border-radius:10px; background:#eff6ff; color:#1e3a8a; }
+  .identity-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+  .identity-badge { padding:3px 9px; border-radius:999px; background:#dbeafe; font-size:12px; font-weight:600; }
+  .identity-badge.verified { background:#dcfce7; color:#166534; }
+  .otp-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .otp-row input { width:150px; padding:9px 10px; border:1px solid #93c5fd; border-radius:7px; font-size:16px; letter-spacing:4px; }
+  .otp-row button { padding:9px 13px; border:0; border-radius:7px; background:#2563eb; color:white; cursor:pointer; }
+  .otp-row button:disabled, .otp-row input:disabled { opacity:.55; cursor:not-allowed; }
+  .identity-status { margin-top:8px; font-size:12px; line-height:1.6; }
+  @media (max-width: 760px) {
+    body { padding: 0; }
+    .container { max-width: none; }
+    .header { border-radius: 0; padding: 20px 16px; }
+    .card { border-radius: 0; padding: 18px 14px; }
+    .emp-info { align-items: flex-start; gap: 12px; }
+    .table-wrap { border-radius: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>26年7月KPI目标确认书</h1>
+    <p>杭州飞途行远 · 2026年7月</p>
+  </div>
+  <div class="card">
+    <div class="emp-info">
+      <div>
+        <div class="name">桑葚（於思旭）</div>
+        <div class="dept">人事行政部 · SSC</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;color:#999">直属上级</div>
+        <div style="font-weight:500">桑葚</div>
+      </div>
+    </div>
+
+    <div class="section-title">KPI考核指标</div>
+    <div class="table-wrap"><table>
+      <thead>
+        <tr><th style="width:58px;text-align:center">序号</th><th style="width:190px">考核指标</th><th>评分细则</th><th style="width:150px;white-space:nowrap">数据来源</th><th style="width:78px;text-align:center">权重</th></tr>
+      </thead>
+      <tr><td>1</td><td>测试</td><td>10</td><td style="color:#1a73e8;font-weight:600">90%</td></tr>
+<tr><td>2</td><td>测试1</td><td>10</td><td style="color:#1a73e8;font-weight:600">10%</td></tr>
+</tbody>
+      <tfoot>
+        <tr class="total-row"><td colspan="4">权重合计</td><td class="weight-cell">100%</td></tr>
+      </tfoot>
+    </table></div>
+
+    <div class="workflow-reminder-grid"><section class="rating-guide" aria-label="评分标准"><div class="rating-guide-title">评分标准</div><div class="rating-guide-list"><div class="rating-guide-row"><div><span class="grade-chip grade-a">A-</span></div><div>优秀</div><div class="rating-threshold">X＞110 · 系数1.2</div></div><div class="rating-guide-row"><div><span class="grade-chip grade-b-plus">B+</span></div><div>优良</div><div class="rating-threshold">100＜X≤110 · 系数1.1</div></div><div class="rating-guide-row"><div><span class="grade-chip grade-b">B</span></div><div>良好</div><div class="rating-threshold">90＜X≤100 · 系数1.0</div></div><div class="rating-guide-row"><div><span class="grade-chip grade-b-minus">B-</span></div><div>合格</div><div class="rating-threshold">80＜X≤90 · 系数0.9</div></div><div class="rating-guide-row"><div><span class="grade-chip grade-c">C</span></div><div>需改进</div><div class="rating-threshold">70＜X≤80 · 系数0.7</div></div><div class="rating-guide-row"><div><span class="grade-chip grade-d">D</span></div><div>不合格</div><div class="rating-threshold">X≤70 · 系数0</div></div></div></section><section class="attendance-note" aria-label="绩效核算备注"><div class="attendance-note-title">备注</div>当月缺勤（当月实际出勤天数＜当月应出勤天数，含各类请假及入离职）：<br>（1）入离职人员：当月绩效奖金按实际出勤天数及绩效评分进行核算。<br>（2）5天＜当月缺勤＜10天：绩效奖金按实际出勤天数及绩效评分进行核算。<br>（3）当月缺勤≥10天：不核发当月绩效奖金。</section></div>
+
+    <div class="sig-section">
+      <div class="section-title">员工确认签名</div>
+      <p class="note">本人在下方签名，表示已阅读并知悉以上26年7月KPI考核指标，同意按此目标执行。</p>
+      <div class="identity-panel">
+        <div class="identity-head"><strong>签署人身份验证</strong><span class="identity-badge" id="identityBadge">未验证</span></div>
+        <div style="font-size:12px;line-height:1.6">验证码将发送至员工本人的钉钉账号。验证通过后方可手写真实姓名；验证码、链接和签署凭证均不可转交他人。</div>
+        <div class="otp-row"><button type="button" id="btnSendOtp">发送钉钉验证码</button><input id="otpCode" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" enterkeyhint="done" maxlength="6" placeholder="6位验证码" disabled><button type="button" id="btnVerifyOtp" disabled>验证身份</button></div>
+        <div class="identity-status" id="identityStatus">请先完成本人钉钉身份验证。</div>
+      </div>
+      <div class="sig-entry">
+        <label for="signatureFormat">选择本次手写签名内容</label>
+        <select class="sig-select" id="signatureFormat"></select>
+        <div class="sig-rule">必须本人在下方逐字手写真实姓名，书写清晰、字形工整；花名或花名组合均不能提交。</div>
+        <div class="sig-validation" id="signatureValidation">请先选择签名内容，再按分字框逐字手写。</div>
+      </div>
+      <div class="sig-canvas-wrap" style="margin-top:12px">
+        <canvas id="sigCanvas"></canvas>
+        <div class="sig-char-guides" id="sigCharGuides"></div>
+        <div class="sig-placeholder" id="sigPlaceholder">请选择签名内容后手写</div>
+      </div>
+      <div class="sig-actions">
+        <button class="btn btn-clear" id="btnClear">清除重签</button>
+        <button class="btn btn-confirm" id="btnConfirm" disabled>确认签名</button>
+      </div>
+      <div id="shareStatus" style="display:none;margin-top:12px"></div>
+    </div>
+
+    <div class="confirm-result" id="confirmResult">
+      <div class="check">&#10003;</div>
+      <div class="msg" id="confirmMsg">确认书已生成，正在回传...</div>
+      <div class="time" id="confirmTime"></div>
+    </div>
+  </div>
+  <div class="footer">杭州飞途行远 · 绩效管理系统 · 本确认书由系统生成</div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('sigCanvas');
+  const ctx = canvas.getContext('2d');
+  const placeholder = document.getElementById('sigPlaceholder');
+  const btnClear = document.getElementById('btnClear');
+  const btnConfirm = document.getElementById('btnConfirm');
+  const confirmResult = document.getElementById('confirmResult');
+  const confirmMsg = document.getElementById('confirmMsg');
+  const confirmTime = document.getElementById('confirmTime');
+  const shareStatus = document.getElementById('shareStatus');
+  const signatureFormat = document.getElementById('signatureFormat');
+  const signatureValidation = document.getElementById('signatureValidation');
+  const sigCharGuides = document.getElementById('sigCharGuides');
+  const btnSendOtp = document.getElementById('btnSendOtp');
+  const btnVerifyOtp = document.getElementById('btnVerifyOtp');
+  const otpCode = document.getElementById('otpCode');
+  const identityBadge = document.getElementById('identityBadge');
+  const identityStatus = document.getElementById('identityStatus');
+  const EMP_META = { empId: "E004", name: "桑葚", realName: "於思旭", dept: "人事行政部", position: "人事行政专员", month: "2026年7月" };
+
+  let hasDrawn = false;
+  let acceptedSignatureText = '';
+  let drawing = false;
+  let lastX = 0;
+  let lastY = 0;
+  let pointCount = 0;
+  let strokeCount = 0;
+  let pathLength = 0;
+  let crossSlotStrokeCount = 0;
+  let currentStrokeMinX = 0;
+  let currentStrokeMaxX = 0;
+  let trustedHandwriting = false;
+  let latestSignatureMetrics = null;
+  let identityVerified = false;
+  let verificationToken = '';
+  let challengeId = '';
+
+  const signatureOptions = [
+    { value: 'realName', label: '仅允许真实姓名：' + EMP_META.realName, text: EMP_META.realName }
+  ];
+  signatureFormat.innerHTML = '<option value="">请选择合法签名格式</option>' + signatureOptions.map(option => '<option value="' + option.value + '">' + option.label + '</option>').join('');
+  signatureFormat.disabled = true;
+
+  function signingLinkContext() {
+    const params = new URLSearchParams(location.search);
+    return { pagePath: location.pathname, pageToken: params.get('token') || '' };
+  }
+
+  function enablePendingOtp(result) {
+    challengeId = result.challengeId || '';
+    if (!challengeId) return false;
+    otpCode.disabled = false;
+    btnVerifyOtp.disabled = false;
+    btnSendOtp.disabled = true;
+    identityStatus.textContent = '验证码已发送至本人钉钉，请输入6位验证码（剩余约' + Math.max(1, Number(result.expiresIn || 300)) + '秒）。';
+    const resendDelay = Math.max(0, Number(result.resendAfter || 0)) * 1000;
+    setTimeout(() => { if (!identityVerified) btnSendOtp.disabled = false; }, resendDelay);
+    return true;
+  }
+
+  async function restorePendingOtp() {
+    try {
+      const response = await fetch('/sign-otp-status', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ empId: EMP_META.empId, month: EMP_META.month, documentType: 'kpi', ...signingLinkContext() })
+      });
+      const result = await response.json();
+      if (response.ok && result.success && result.active) enablePendingOtp(result);
+    } catch (_) {}
+  }
+
+  btnSendOtp.addEventListener('click', async () => {
+    btnSendOtp.disabled = true;
+    identityStatus.textContent = '正在向本人钉钉发送验证码...';
+    try {
+      const response = await fetch('/request-sign-otp', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ empId: EMP_META.empId, month: EMP_META.month, documentType: 'kpi', ...signingLinkContext() })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || '验证码发送失败');
+      enablePendingOtp(result);
+      otpCode.focus();
+      identityStatus.textContent = result.resumed ? '已恢复此前发送的验证码，请直接输入，无需重复发送。' :
+        (result.delivery && result.delivery.sent ? '验证码已发送至本人钉钉，5分钟内有效。' : '验证码已进入钉钉发送队列，请稍候查看。');
+    } catch (error) {
+      identityStatus.textContent = '发送失败：' + error.message;
+      btnSendOtp.disabled = false;
+    }
+  });
+
+  btnVerifyOtp.addEventListener('click', async () => {
+    if (!/^\d{6}$/.test(otpCode.value.trim())) { identityStatus.textContent = '请输入6位数字验证码。'; return; }
+    btnVerifyOtp.disabled = true;
+    try {
+      const response = await fetch('/verify-sign-otp', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challengeId, code: otpCode.value.trim() })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || '身份验证失败');
+      identityVerified = true;
+      verificationToken = result.verificationToken;
+      identityBadge.textContent = '本人钉钉已验证';
+      identityBadge.className = 'identity-badge verified';
+      identityStatus.textContent = '身份验证通过（服务器时间：' + result.verifiedAt + '），请本人手写真实姓名。';
+      otpCode.disabled = true;
+      btnSendOtp.disabled = true;
+      signatureFormat.disabled = false;
+      signatureFormat.value = 'realName';
+      signatureFormat.dispatchEvent(new Event('change'));
+    } catch (error) {
+      identityStatus.textContent = '验证失败：' + error.message;
+      btnVerifyOtp.disabled = false;
+    }
+  });
+
+  otpCode.addEventListener('input', () => {
+    otpCode.value = otpCode.value.replace(/\D/g, '').slice(0, 6);
+  });
+  otpCode.addEventListener('keydown', event => {
+    if (event.key === 'Enter' && !btnVerifyOtp.disabled) btnVerifyOtp.click();
+  });
+  restorePendingOtp();
+
+  function selectedOption() {
+    return signatureOptions.find(option => option.value === signatureFormat.value) || null;
+  }
+
+  function resizeCanvas() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = (rect.width - 16) * 2;
+    canvas.height = 320;
+    ctx.strokeStyle = '#111827';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+  }
+
+  resizeCanvas();
+
+  function renderCharacterGuides() {
+    const option = selectedOption();
+    acceptedSignatureText = option ? option.text : '';
+    const characters = Array.from(acceptedSignatureText);
+    sigCharGuides.style.gridTemplateColumns = 'repeat(' + Math.max(characters.length, 1) + ', 1fr)';
+    sigCharGuides.innerHTML = characters.map((character, index) => '<div class="sig-char-guide"><span>' + (index + 1) + ' · ' + character + '</span></div>').join('');
+    placeholder.textContent = option ? '请在每个分字框内手写对应文字' : '请选择签名内容后手写';
+    placeholder.style.display = 'block';
+  }
+
+  function clearHandwriting() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasDrawn = false;
+    drawing = false;
+    pointCount = 0;
+    strokeCount = 0;
+    pathLength = 0;
+    crossSlotStrokeCount = 0;
+    currentStrokeMinX = 0;
+    currentStrokeMaxX = 0;
+    trustedHandwriting = false;
+    latestSignatureMetrics = null;
+    btnConfirm.disabled = true;
+    renderCharacterGuides();
+  }
+
+  function getPos(event) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (event.clientX - rect.left) * (canvas.width / rect.width),
+      y: (event.clientY - rect.top) * (canvas.height / rect.height)
+    };
+  }
+
+  function calculateMetrics() {
+    const characters = Array.from(acceptedSignatureText);
+    if (!characters.length) return { valid: false, message: '请先选择签名内容。' };
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const slotWidth = canvas.width / characters.length;
+    const characterMetrics = characters.map((character, index) => {
+      let inkPixels = 0;
+      let minX = canvas.width, maxX = -1, minY = canvas.height, maxY = -1;
+      const startX = Math.floor(index * slotWidth);
+      const endX = Math.min(canvas.width, Math.ceil((index + 1) * slotWidth));
+      for (let y = 0; y < canvas.height; y += 2) {
+        for (let x = startX; x < endX; x += 2) {
+          if (pixels[(y * canvas.width + x) * 4 + 3] > 30) {
+            inkPixels++;
+            minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+          }
+        }
+      }
+      const widthRatio = maxX >= 0 ? (maxX - minX + 1) / slotWidth : 0;
+      const heightRatio = maxY >= 0 ? (maxY - minY + 1) / canvas.height : 0;
+      return { character, inkPixels, widthRatio, heightRatio, valid: inkPixels >= 35 && widthRatio >= 0.08 && heightRatio >= 0.10 };
+    });
+    const missingIndex = characterMetrics.findIndex(metric => !metric.valid);
+    const minimumStrokes = Math.max(characters.length * 2, 3);
+    const valid = trustedHandwriting && pointCount >= characters.length * 3 &&
+      pathLength >= characters.length * 35 && strokeCount >= minimumStrokes &&
+      crossSlotStrokeCount === 0 && missingIndex < 0;
+    return {
+      valid,
+      manuallyDrawn: trustedHandwriting,
+      signatureFormat: signatureFormat.value,
+      expectedCharacterCount: characters.length,
+      pointCount,
+      strokeCount,
+      crossSlotStrokeCount,
+      pathLength: Math.round(pathLength),
+      characters: characterMetrics,
+      message: missingIndex >= 0
+        ? '第' + (missingIndex + 1) + '字“' + characters[missingIndex] + '”笔迹不足或不清晰，请逐字重写。'
+        : (crossSlotStrokeCount > 0
+          ? '检测到跨字连写，请每个字在独立分字框内用楷体逐字书写。'
+          : (strokeCount < minimumStrokes
+            ? '笔画数量过少，请用楷体逐字完整书写真实姓名。'
+            : (valid ? '手写签名验证通过：内容完整、逐字清晰。' : '笔迹过少或不够清晰，请用楷体逐字完整书写。')))
+    };
+  }
+
+  function updateHandwritingValidation() {
+    latestSignatureMetrics = calculateMetrics();
+    hasDrawn = latestSignatureMetrics.valid;
+    signatureValidation.textContent = latestSignatureMetrics.message;
+    signatureValidation.className = 'sig-validation ' + (hasDrawn ? 'valid' : 'invalid');
+    btnConfirm.disabled = !hasDrawn || !identityVerified;
+  }
+
+  canvas.addEventListener('pointerdown', event => {
+    if (!identityVerified) {
+      signatureValidation.textContent = '请先完成本人钉钉身份验证。';
+      signatureValidation.className = 'sig-validation invalid';
+      return;
+    }
+    if (!selectedOption()) {
+      signatureValidation.textContent = '请先选择签名内容。';
+      signatureValidation.className = 'sig-validation invalid';
+      return;
+    }
+    event.preventDefault();
+    drawing = true;
+    trustedHandwriting = trustedHandwriting || event.isTrusted;
+    strokeCount++;
+    const pos = getPos(event);
+    lastX = pos.x; lastY = pos.y;
+    currentStrokeMinX = pos.x;
+    currentStrokeMaxX = pos.x;
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    placeholder.style.display = 'none';
+    try { canvas.setPointerCapture(event.pointerId); } catch (_) {}
+  });
+  canvas.addEventListener('pointermove', event => {
+    if (!drawing) return;
+    event.preventDefault();
+    const pos = getPos(event);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    pathLength += Math.hypot(pos.x - lastX, pos.y - lastY);
+    pointCount++;
+    currentStrokeMinX = Math.min(currentStrokeMinX, pos.x);
+    currentStrokeMaxX = Math.max(currentStrokeMaxX, pos.x);
+    lastX = pos.x; lastY = pos.y;
+  });
+  const stopDrawing = event => {
+    if (!drawing) return;
+    if (event) event.preventDefault();
+    const characterCount = Math.max(Array.from(acceptedSignatureText).length, 1);
+    const slotWidth = canvas.width / characterCount;
+    const startSlot = Math.floor(Math.max(0, currentStrokeMinX) / slotWidth);
+    const endSlot = Math.floor(Math.min(canvas.width - 1, currentStrokeMaxX) / slotWidth);
+    if (startSlot !== endSlot) crossSlotStrokeCount++;
+    drawing = false;
+    updateHandwritingValidation();
+  };
+  canvas.addEventListener('pointerup', stopDrawing);
+  canvas.addEventListener('pointercancel', stopDrawing);
+  signatureFormat.addEventListener('change', () => {
+    clearHandwriting();
+    signatureValidation.textContent = selectedOption() ? '请按分字框逐字手写，系统将自动检查完整度和清晰度。' : '请先选择签名内容，再按分字框逐字手写。';
+    signatureValidation.className = 'sig-validation';
+  });
+  renderCharacterGuides();
+
+  btnClear.addEventListener('click', () => {
+    clearHandwriting();
+    confirmResult.style.display = 'none';
+    shareStatus.style.display = 'none';
+    shareStatus.innerHTML = '';
+    signatureValidation.textContent = '已清除，请重新逐字手写。';
+    signatureValidation.className = 'sig-validation';
+  });
+
+  // Generate self-contained HTML confirmation document with embedded signature
+  function generateConfirmationHTML(sigDataUrl, timeStr, signatureText) {
+    return `<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>KPI目标确认书 - 桑葚 - 2026年7月</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:24px;max-width:1120px;margin:0 auto;color:#1a1a1a;background:#fff}
+h1{font-size:18px;text-align:center;margin-bottom:4px}
+.sub{text-align:center;font-size:13px;color:#666;margin-bottom:20px}
+.info{display:flex;justify-content:space-between;padding:12px 16px;background:#f8f9fa;border-radius:8px;margin-bottom:16px;font-size:14px}
+.table-wrap{width:100%;overflow-x:auto;border:1px solid #dbeafe;border-radius:10px;margin-bottom:20px}
+table{width:100%;min-width:960px;table-layout:fixed;border-collapse:collapse;font-size:14px}
+th{background:#f0f4ff;color:#1a73e8;font-weight:600;padding:10px;text-align:left;border-bottom:2px solid #d0d9f0}
+td{padding:10px;border-bottom:1px solid #eee;vertical-align:top;line-height:1.65;overflow-wrap:anywhere}
+.sig-area{text-align:center;margin-top:20px;padding:16px;border-top:2px solid #e5e7eb}
+.sig-area img{max-width:280px;height:auto;border:1px solid #e5e7eb;border-radius:8px;background:#fafbfc;padding:4px}
+.signature-text{font-size:13px;color:#64748b;margin-top:8px}
+.attendance-note{margin-top:24px;padding:14px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#7c2d12;font-size:12px;line-height:1.8}
+.workflow-reminder-grid{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(0,1.35fr);gap:14px;margin:20px 0;align-items:stretch}.rating-guide,.workflow-reminder-grid .attendance-note{margin:0;padding:15px 17px;border-radius:11px;font-size:12px;line-height:1.7}.rating-guide{background:#f8fafc;border:1px solid #dbe3ee;color:#334155}.rating-guide-title,.attendance-note-title{font-size:14px;font-weight:700;margin-bottom:8px;color:#0f172a}.attendance-note-title{color:#9a3412}.rating-guide-list{display:grid}.rating-guide-row{display:grid;grid-template-columns:42px minmax(68px,1fr) auto;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid #e8edf3}.rating-guide-row:last-child{border-bottom:0}.grade-chip{display:inline-flex;justify-content:center;align-items:center;min-width:34px;padding:1px 8px;border-radius:999px;font-weight:700;border:1px solid}.grade-a{color:#059669;background:#ecfdf5;border-color:#6ee7b7}.grade-b-plus{color:#2563eb;background:#eff6ff;border-color:#bfdbfe}.grade-b{color:#7c3aed;background:#f5f3ff;border-color:#ddd6fe}.grade-b-minus{color:#d97706;background:#fffbeb;border-color:#fde68a}.grade-c{color:#ea580c;background:#fff7ed;border-color:#fed7aa}.grade-d{color:#dc2626;background:#fef2f2;border-color:#fecaca}.rating-threshold{color:#64748b;text-align:right;white-space:nowrap}
+.time{font-size:12px;color:#666;margin-top:10px}
+.footer{text-align:center;margin-top:24px;font-size:11px;color:#bbb;border-top:1px solid #f0f0f0;padding-top:12px}
+@media(max-width:820px){.workflow-reminder-grid{grid-template-columns:1fr}.rating-guide-row{grid-template-columns:42px 1fr auto}}@media(max-width:760px){body{padding:12px}.table-wrap{border-radius:8px}}
+</style></head><body>
+<h1>26年7月KPI目标确认书</h1>
+<div class="sub">杭州飞途行远 · 2026年7月</div>
+<div class="info"><div><strong>桑葚（於思旭）</strong><br><span style="color:#666;font-size:13px">人事行政部 · SSC</span></div><div style="text-align:right"><span style="font-size:12px;color:#999">直属上级</span><br><strong>路得</strong></div></div>
+<div class="table-wrap"><table><thead><tr><th style="width:58px;text-align:center">#</th><th style="width:190px">考核指标</th><th>评分细则</th><th style="width:150px;white-space:nowrap">数据来源</th><th style="width:78px;text-align:center">权重</th></tr></thead>
+<tr><td>1</td><td>测试</td><td>10</td><td>--</td><td style="color:#1a73e8;font-weight:600">90%</td></tr>
+<tr><td>2</td><td>测试1</td><td>10</td><td>--</td><td style="color:#1a73e8;font-weight:600">10%</td></tr>
+</tbody>
+<tfoot><tr style="background:#f8f9fa;font-weight:600"><td colspan="4">权重合计</td><td style="color:#1a73e8;text-align:center">100%</td></tr></tfoot></table></div>
+<div class="workflow-reminder-grid"><section class="rating-guide" aria-label="评分标准"><div class="rating-guide-title">评分标准</div><div class="rating-guide-list"><div class="rating-guide-row"><div><span class="grade-chip grade-a">A-</span></div><div>优秀</div><div class="rating-threshold">X＞110 · 系数1.2</div></div><div class="rating-guide-row"><div><span class="grade-chip grade-b-plus">B+</span></div><div>优良</div><div class="rating-threshold">100＜X≤110 · 系数1.1</div></div><div class="rating-guide-row"><div><span class="grade-chip grade-b">B</span></div><div>良好</div><div class="rating-threshold">90＜X≤100 · 系数1.0</div></div><div class="rating-guide-row"><div><span class="grade-chip grade-b-minus">B-</span></div><div>合格</div><div class="rating-threshold">80＜X≤90 · 系数0.9</div></div><div class="rating-guide-row"><div><span class="grade-chip grade-c">C</span></div><div>需改进</div><div class="rating-threshold">70＜X≤80 · 系数0.7</div></div><div class="rating-guide-row"><div><span class="grade-chip grade-d">D</span></div><div>不合格</div><div class="rating-threshold">X≤70 · 系数0</div></div></div></section><section class="attendance-note" aria-label="绩效核算备注"><div class="attendance-note-title">备注</div>当月缺勤（当月实际出勤天数＜当月应出勤天数，含各类请假及入离职）：<br>（1）入离职人员：当月绩效奖金按实际出勤天数及绩效评分进行核算。<br>（2）5天＜当月缺勤＜10天：绩效奖金按实际出勤天数及绩效评分进行核算。<br>（3）当月缺勤≥10天：不核发当月绩效奖金。</section></div>
+<p style="font-size:13px;color:#666;margin-bottom:8px">本人签名确认已阅读并知悉以上KPI考核指标：</p>
+<div class="sig-area"><img src="${sigDataUrl}" alt="员工手写签名"><div class="signature-text">已验证手写内容：${signatureText}</div><div class="time">确认时间：${timeStr}</div></div>
+<div class="footer">杭州飞途行远 · 绩效管理系统 · 本确认书由系统生成</div>
+</body></html>`;
+  }
+
+  btnConfirm.addEventListener('click', async () => {
+    const validation = calculateMetrics();
+    latestSignatureMetrics = validation;
+    if (!identityVerified || !verificationToken) {
+      signatureValidation.textContent = '本人钉钉身份验证未完成或已失效。';
+      signatureValidation.className = 'sig-validation invalid';
+      return;
+    }
+    if (!hasDrawn || !validation.valid || !acceptedSignatureText || !signatureFormat.value) {
+      signatureValidation.textContent = validation.message || '签名不符合规范，不能提交。';
+      signatureValidation.className = 'sig-validation invalid';
+      return;
+    }
+    const now = new Date();
+    const timeStr = now.getFullYear() + '-' +
+      String(now.getMonth()+1).padStart(2,'0') + '-' +
+      String(now.getDate()).padStart(2,'0') + ' ' +
+      String(now.getHours()).padStart(2,'0') + ':' +
+      String(now.getMinutes()).padStart(2,'0') + ':' +
+      String(now.getSeconds()).padStart(2,'0');
+
+    btnConfirm.disabled = true;
+    btnConfirm.textContent = '验证并提交中...';
+    btnClear.textContent = '重新签名';
+
+    const sigDataUrl = canvas.toDataURL('image/png');
+    const htmlContent = generateConfirmationHTML(sigDataUrl, timeStr, acceptedSignatureText);
+
+    try {
+      const response = await fetch('/submit-kpi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          empId: EMP_META.empId,
+          name: EMP_META.name,
+          realName: EMP_META.realName,
+          month: EMP_META.month,
+          signedAt: timeStr,
+          signatureText: acceptedSignatureText,
+          signatureFormat: signatureFormat.value,
+          signatureStyle: '手写楷体',
+          signatureMetrics: latestSignatureMetrics,
+          verificationToken: verificationToken,
+          sigData: sigDataUrl,
+          doc: htmlContent
+        })
+      });
+      const responseText = await response.text();
+      let result = {};
+      try { result = JSON.parse(responseText); } catch (_) { result = { error: responseText }; }
+      if (!response.ok || !result.success) throw new Error(result.error || ('HTTP ' + response.status));
+
+      try {
+        localStorage.setItem('kpi_signed_' + EMP_META.empId, JSON.stringify({
+          empId: EMP_META.empId,
+          name: EMP_META.name,
+          realName: EMP_META.realName,
+          dept: EMP_META.dept,
+          position: EMP_META.position,
+          month: EMP_META.month,
+          signedAt: timeStr,
+          signatureText: acceptedSignatureText,
+          doc: htmlContent
+        }));
+      } catch (_) {}
+      confirmTime.textContent = '确认时间：' + timeStr;
+      confirmMsg.textContent = '签名验证通过，目标确认书已提交并自动归档！';
+      confirmResult.style.display = 'block';
+      confirmResult.scrollIntoView({ behavior: 'smooth' });
+      btnConfirm.textContent = '已提交';
+    } catch (error) {
+      confirmMsg.textContent = '签名验证或归档失败：' + error.message;
+      confirmResult.style.display = 'block';
+      btnConfirm.disabled = false;
+      btnConfirm.textContent = '确认签名';
+    }
+  });})();
+</script>
+</body>
+</html>

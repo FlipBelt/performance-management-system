@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>绩效结果确认书 - EMP_NAME</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 16px; color: #1a1a1a; }
+  .container { max-width: 1360px; margin: 0 auto; }
+  .header { background: linear-gradient(135deg, #16a34a, #15803d); color: white; padding: 28px 24px; border-radius: 16px 16px 0 0; text-align: center; }
+  .header h1 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .header p { font-size: 13px; opacity: 0.85; }
+  .card { background: white; border-radius: 0 0 16px 16px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .emp-info { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #f0fdf4; border-radius: 10px; margin-bottom: 20px; font-size: 14px; border: 1px solid #bbf7d0; }
+  .emp-info .name { font-weight: 700; color: #1a1a1a; font-size: 15px; }
+  .emp-info .dept { color: #666; font-size: 13px; margin-top: 2px; }
+  .section-title { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #16a34a; }
+  .table-wrap { width: 100%; overflow-x: auto; border: 1px solid #dcfce7; border-radius: 10px; margin-bottom: 20px; }
+  table { width: 100%; min-width: 1240px; table-layout: fixed; border-collapse: collapse; margin-bottom: 0; font-size: 13px; }
+  th { background: #f0fdf4; color: #16a34a; font-weight: 600; padding: 10px 8px; text-align: left; border-bottom: 2px solid #bbf7d0; }
+  td { padding: 12px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: top; line-height: 1.6; }
+  tbody tr:hover { background: #fafffb; }
+  .score-cell { font-weight: 700; color: #1a1a1a; text-align: center; vertical-align: middle; font-size: 15px; }
+  .self-score-cell { color: #2563eb; }
+  .mgr-score-cell { color: #7c3aed; }
+  .bp-score-cell { color: #059669; }
+  .weight-cell { color: #16a34a; font-weight: 700; text-align: center; vertical-align: middle; }
+  .completion-cell { color: #166534; background: #f0fdf4; vertical-align: middle; white-space: pre-line; }
+  .indicator-main { font-weight: 700; color: #0f172a; }
+  .combo-label { margin-top: 4px; color: #2563eb; font-size: 11px; }
+  .subcell-list { display: grid; gap: 6px; margin-top: 7px; }
+  .subcell-item { padding: 7px 8px; background: #f8fafc; border-left: 3px solid #93c5fd; border-radius: 5px; color: #475569; white-space: pre-line; overflow-wrap: anywhere; }
+  .source-value { color: #334155; overflow-wrap: anywhere; }
+  .total-row { background: #f8faf8; font-weight: 600; }
+  .total-row td { padding: 12px 8px; border-top: 2px solid #16a34a; }
+  .result-card { background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1px solid #bbf7d0; border-radius: 12px; padding: 18px 24px; margin-bottom: 20px; text-align: center; display: grid; grid-template-columns: minmax(180px, .8fr) minmax(320px, 1.4fr); align-items: center; column-gap: 24px; }
+  .result-card .final-score { font-size: 48px; font-weight: 800; color: #16a34a; line-height: 1.2; }
+  .result-card .final-label { font-size: 13px; color: #666; margin-top: 4px; grid-column: 1; }
+  .result-card .final-score { grid-column: 1; }
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
+  .result-item { background: white; border-radius: 8px; padding: 12px; text-align: center; border: 1px solid #e5e7eb; }
+  .result-item .label { font-size: 12px; color: #999; margin-bottom: 4px; }
+  .result-item .value { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+  .result-item .value.grade-a { color: #16a34a; }
+  .result-item .value.grade-b-plus { color: #2563eb; }
+  .result-item .value.grade-b { color: #0891b2; }
+  .result-item .value.grade-b-minus { color: #d97706; }
+  .result-item .value.grade-c { color: #ea580c; }
+  .result-item .value.grade-d { color: #dc2626; }
+  .score-note { margin-top: 4px; color: #64748b; font-size: 11px; font-weight: 400; line-height: 1.45; white-space: pre-wrap; text-align: left; }
+  .sig-section { margin-top: 24px; }
+  .sig-entry { margin-top: 12px; padding: 14px; background: #f8fafc; border: 1px solid #bbf7d0; border-radius: 10px; }
+  .sig-entry label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px; }
+  .sig-select { width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; font-size: 14px; color: #111827; outline: none; }
+  .sig-select:focus { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.12); }
+  .sig-rule { margin-top: 7px; color: #64748b; font-size: 12px; line-height: 1.6; }
+  .sig-validation { min-height: 20px; margin-top: 7px; font-size: 12px; font-weight: 600; }
+  .sig-validation.valid { color: #15803d; }
+  .sig-validation.invalid { color: #dc2626; }
+  .sig-canvas-wrap { border: 2px dashed #d0d5dd; border-radius: 12px; padding: 8px; background: #fafbfc; position: relative; }
+  .sig-canvas-wrap canvas { width: 100%; height: 140px; display: block; cursor: crosshair; touch-action: none; border-radius: 8px; position:relative; z-index:2; }
+  .sig-char-guides { position:absolute; inset:8px; display:grid; pointer-events:none; z-index:1; border-radius:8px; overflow:hidden; }
+  .sig-char-guide { position:relative; border-right:1px dashed #cbd5e1; }
+  .sig-char-guide:last-child { border-right:none; }
+  .sig-char-guide span { position:absolute; top:6px; left:50%; transform:translateX(-50%); font-family:KaiTi,STKaiti,"楷体",serif; font-size:18px; color:#94a3b8; opacity:.75; }
+  .sig-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #bbb; font-size: 14px; pointer-events: none; }
+  .sig-actions { display: flex; gap: 10px; margin-top: 10px; justify-content: flex-end; }
+  .btn { padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-clear { background: #f0f0f0; color: #666; }
+  .btn-clear:hover { background: #e0e0e0; }
+  .btn-confirm { background: #16a34a; color: white; }
+  .btn-confirm:hover { background: #15803d; }
+  .btn-confirm:disabled { background: #ccc; cursor: not-allowed; }
+  .confirm-result { display: none; margin-top: 20px; padding: 20px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; text-align: center; }
+  .confirm-result .check { font-size: 36px; margin-bottom: 8px; }
+  .confirm-result .msg { font-size: 14px; color: #166534; }
+  .confirm-result .time { font-size: 12px; color: #666; margin-top: 6px; }
+  .note { font-size: 12px; color: #888; margin-top: 8px; line-height: 1.6; }
+  .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #999; }
+  .attendance-note { margin-top:24px; padding:14px 16px; background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; color:#7c2d12; font-size:12px; line-height:1.8; }
+  .attendance-note strong { display:block; margin-bottom:4px; color:#9a3412; }
+  .dispute-reminder { margin-top:12px; padding:14px 16px; background:#fff1f2; border:1px solid #fecdd3; border-radius:10px; color:#9f1239; font-size:13px; line-height:1.75; }
+  .dispute-reminder strong { color:#881337; }
+  .identity-panel { margin:14px 0; padding:14px 16px; border:1px solid #bbf7d0; border-radius:10px; background:#f0fdf4; color:#14532d; }
+  .identity-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+  .identity-badge { padding:3px 9px; border-radius:999px; background:#dcfce7; font-size:12px; font-weight:600; }
+  .identity-badge.verified { background:#16a34a; color:white; }
+  .otp-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .otp-row input { width:150px; padding:9px 10px; border:1px solid #86efac; border-radius:7px; font-size:16px; letter-spacing:4px; }
+  .otp-row button { padding:9px 13px; border:0; border-radius:7px; background:#16a34a; color:white; cursor:pointer; }
+  .otp-row button:disabled, .otp-row input:disabled { opacity:.55; cursor:not-allowed; }
+  .identity-status { margin-top:8px; font-size:12px; line-height:1.6; }
+  @media (max-width: 760px) {
+    body { padding: 8px; }
+    .card { padding: 14px; }
+    .emp-info { align-items: flex-start; gap: 10px; }
+    .result-card { grid-template-columns: 1fr; row-gap: 12px; }
+    .result-grid { grid-column: 1; grid-row: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>绩效结果确认书</h1>
+    <p>杭州飞途行远 · 2026年7月</p>
+  </div>
+  <div class="card">
+    <div class="emp-info">
+      <div>
+        <div class="name" id="empName">EMP_NAME（EMP_REALNAME）</div>
+        <div class="dept">EMP_DEPT · EMP_POSITION</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;color:#999">直属上级</div>
+        <div style="font-weight:500">EMP_MANAGER</div>
+      </div>
+    </div>
+
+    <div class="section-title">绩效评分明细</div>
+    <div class="table-wrap"><table>
+      <thead>
+        <tr><th style="width:44px;text-align:center">#</th><th style="width:170px">考核指标</th><th>评分细则</th><th style="width:160px">数据来源</th><th style="width:72px;text-align:center">权重</th><th style="width:180px">实际完成情况</th><th style="width:82px;text-align:center">员工自评</th><th style="width:82px;text-align:center">上级评分</th><th style="width:82px;text-align:center">BP核准</th></tr>
+      </thead>
+      <tbody id="kpiBody">
+        <!-- KPI rows injected by server -->
+      </tbody>
+      <tfoot>
+        <tr class="total-row">
+          <td colspan="4">合计</td>
+          <td class="weight-cell">100%</td>
+          <td></td>
+          <td class="score-cell self-score-cell" id="selfTotal">SELF_TOTAL</td>
+          <td class="score-cell mgr-score-cell" id="mgrTotal">MGR_TOTAL</td>
+          <td class="score-cell bp-score-cell" id="bpTotal">BP_TOTAL</td>
+        </tr>
+      </tfoot>
+    </table></div>
+
+    <div class="section-title">最终结果</div>
+    <div class="result-card">
+      <div class="final-score" id="finalScore">FINAL_SCORE</div>
+      <div class="final-label">最终绩效得分</div>
+      <div class="result-grid">
+        <div class="result-item">
+          <div class="label">绩效等级</div>
+          <div class="value" id="gradeValue">GRADE</div>
+        </div>
+        <div class="result-item">
+          <div class="label">绩效系数</div>
+          <div class="value" id="coeffValue">COEFF</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="attendance-note"><strong>备注：</strong>当月缺勤（当月实际出勤天数＜当月应出勤天数，含各类请假及入离职）：<br>（1）入离职人员：当月绩效奖金按实际出勤天数及绩效评分进行核算。<br>（2）5天＜当月缺勤＜10天：绩效奖金按实际出勤天数及绩效评分进行核算。<br>（3）当月缺勤≥10天：不核发当月绩效奖金。</div>
+    <div class="dispute-reminder"><strong>绩效异议提醒：</strong>绩效如有异议，请于收到绩效2日内联系BP进行校准，逾期未反馈的，视为对绩效结果的认可，不再受理异议申请。</div>
+
+    <div class="sig-section">
+      <div class="section-title">员工确认签名</div>
+      <p class="note">本人签名确认已阅读并知悉以上绩效评估结果，同意此评定结果。</p>
+      <div class="identity-panel">
+        <div class="identity-head"><strong>签署人身份验证</strong><span class="identity-badge" id="identityBadge">未验证</span></div>
+        <div style="font-size:12px;line-height:1.6">验证码将发送至员工本人的钉钉账号。验证通过后方可手写真实姓名；验证码、链接和签署凭证均不可转交他人。</div>
+        <div class="otp-row"><button type="button" id="btnSendOtp">发送钉钉验证码</button><input id="otpCode" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" enterkeyhint="done" maxlength="6" placeholder="6位验证码" disabled><button type="button" id="btnVerifyOtp" disabled>验证身份</button></div>
+        <div class="identity-status" id="identityStatus">请先完成本人钉钉身份验证。</div>
+      </div>
+      <div class="sig-entry">
+        <label for="signatureFormat">选择本次手写签名内容</label>
+        <select class="sig-select" id="signatureFormat"></select>
+        <div class="sig-rule">必须本人在下方逐字手写真实姓名，书写清晰、字形工整；花名或花名组合均不能提交。</div>
+        <div class="sig-validation" id="signatureValidation">请先选择签名内容，再按分字框逐字手写。</div>
+      </div>
+      <div class="sig-canvas-wrap" style="margin-top:12px">
+        <canvas id="sigCanvas"></canvas>
+        <div class="sig-char-guides" id="sigCharGuides"></div>
+        <div class="sig-placeholder" id="sigPlaceholder">请选择签名内容后手写</div>
+      </div>
+      <div class="sig-actions">
+        <button class="btn btn-clear" id="btnClear">清除重签</button>
+        <button class="btn btn-confirm" id="btnConfirm" disabled>确认签名</button>
+      </div>
+    </div>
+
+    <div class="confirm-result" id="confirmResult">
+      <div class="check">&#10003;</div>
+      <div class="msg" id="confirmMsg">确认书已签名，正在提交...</div>
+      <div class="time" id="confirmTime"></div>
+    </div>
+  </div>
+  <div class="footer">杭州飞途行远 · 绩效管理系统 · 本确认书由系统生成</div>
+</div>
+
+<script>
+// Data injected by server
+var KPIS = [
+  { seq: 1, indicator: "KPI_INDICATOR_1", max: 30, completion: "", selfScore: 0, mgrScore: 0, bpScore: 0 }
+];
+var SELF_TOTAL = 0;
+var MGR_TOTAL = 0;
+var BP_TOTAL = 0;
+var FINAL_SCORE = 0;
+var GRADE = "";
+var GRADE_CLASS = "";
+var COEFF = 1;
+var EMP = { empId: "E004", name: "桑葚", realName: "於思旭", dept: "人事行政部", position: "人事行政专员", directMgr: "十叶", month: "2026年7月" };
+
+function escapeResultHtml(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, function(character) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character];
+  });
+}
+
+function resultKpiIndicator(kpi) {
+  var items = Array.isArray(kpi.items) ? kpi.items : [];
+  var html = '<div class="indicator-main">' + escapeResultHtml(kpi.indicator || '--') + '</div>';
+  if (!items.length) return html;
+  return html + '<div class="combo-label">组合指标 · ' + items.length + '项</div><div class="subcell-list">' +
+    items.map(function(item, index) { return '<div class="subcell-item"><strong>' + (index + 1) + '. ' + escapeResultHtml(item.indicator || '--') + '</strong><br><span style="color:#2563eb">' + escapeResultHtml(item.weight) + '%</span></div>'; }).join('') + '</div>';
+}
+
+function resultKpiRule(kpi) {
+  var items = Array.isArray(kpi.items) ? kpi.items : [];
+  if (!items.length) return '<div style="white-space:pre-line">' + escapeResultHtml(kpi.rule || '--') + '</div>';
+  return '<div class="subcell-list" style="margin-top:0">' + items.map(function(item, index) {
+    return '<div class="subcell-item"><strong>' + (index + 1) + '.</strong> ' + escapeResultHtml(item.rule || '--') + '</div>';
+  }).join('') + '</div>';
+}
+
+function resultKpiSource(kpi) {
+  var items = Array.isArray(kpi.items) ? kpi.items : [];
+  if (!items.length) return '<div class="source-value">' + escapeResultHtml(kpi.dataSource || '--') + '</div>';
+  return '<div class="subcell-list" style="margin-top:0">' + items.map(function(item, index) {
+    return '<div class="subcell-item source-value"><strong>' + (index + 1) + '.</strong> ' + escapeResultHtml(item.dataSource || '--') + '</div>';
+  }).join('') + '</div>';
+}
+
+function resultScoreWithRemark(score, remark, label) {
+  return escapeResultHtml(score != null ? score : '--') + (remark ? '<div class="score-note">' + escapeResultHtml(label) + '：' + escapeResultHtml(remark) + '</div>' : '');
+}
+
+// Render KPI table
+(function() {
+  var tbody = document.getElementById('kpiBody');
+  var html = '';
+  for (var i = 0; i < KPIS.length; i++) {
+    var k = KPIS[i];
+    html += '<tr><td style="text-align:center;vertical-align:middle">' + k.seq + '</td><td>' + resultKpiIndicator(k) + '</td><td>' + resultKpiRule(k) + '</td><td>' + resultKpiSource(k) + '</td><td class="weight-cell">' + k.max + '%</td>'
+      + '<td class="completion-cell">' + escapeResultHtml(k.completion || '--') + '</td>'
+      + '<td class="score-cell self-score-cell">' + k.selfScore + '</td>'
+      + '<td class="score-cell mgr-score-cell">' + resultScoreWithRemark(k.mgrScore, k.mgrRemark, '上级备注') + '</td>'
+      + '<td class="score-cell bp-score-cell">' + resultScoreWithRemark(k.bpScore, k.bpRemark, 'BP备注') + '</td></tr>';
+  }
+  tbody.innerHTML = html;
+  document.getElementById('selfTotal').textContent = SELF_TOTAL;
+  document.getElementById('mgrTotal').textContent = MGR_TOTAL;
+  document.getElementById('bpTotal').textContent = BP_TOTAL;
+  document.getElementById('finalScore').textContent = FINAL_SCORE;
+  var gradeEl = document.getElementById('gradeValue');
+  gradeEl.textContent = GRADE;
+  if (GRADE_CLASS) gradeEl.className = 'value ' + GRADE_CLASS;
+  document.getElementById('coeffValue').textContent = COEFF;
+})();
+
+// Signature canvas
+(function() {
+  var canvas = document.getElementById('sigCanvas');
+  var ctx = canvas.getContext('2d');
+  var placeholder = document.getElementById('sigPlaceholder');
+  var btnClear = document.getElementById('btnClear');
+  var btnConfirm = document.getElementById('btnConfirm');
+  var confirmResult = document.getElementById('confirmResult');
+  var confirmMsg = document.getElementById('confirmMsg');
+  var confirmTime = document.getElementById('confirmTime');
+  var signatureFormat = document.getElementById('signatureFormat');
+  var signatureValidation = document.getElementById('signatureValidation');
+  var sigCharGuides = document.getElementById('sigCharGuides');
+  var btnSendOtp = document.getElementById('btnSendOtp');
+  var btnVerifyOtp = document.getElementById('btnVerifyOtp');
+  var otpCode = document.getElementById('otpCode');
+  var identityBadge = document.getElementById('identityBadge');
+  var identityStatus = document.getElementById('identityStatus');
+
+  var hasDrawn = false;
+  var acceptedSignatureText = '';
+  var drawing = false;
+  var lastX = 0;
+  var lastY = 0;
+  var pointCount = 0;
+  var strokeCount = 0;
+  var pathLength = 0;
+  var crossSlotStrokeCount = 0;
+  var currentStrokeMinX = 0;
+  var currentStrokeMaxX = 0;
+  var trustedHandwriting = false;
+  var latestSignatureMetrics = null;
+  var identityVerified = false;
+  var verificationToken = '';
+  var challengeId = '';
+
+  var signatureOptions = [
+    { value: 'realName', label: '仅允许真实姓名：' + EMP.realName, text: EMP.realName }
+  ];
+  signatureFormat.innerHTML = '<option value="">请选择合法签名格式</option>' + signatureOptions.map(function(option) { return '<option value="' + option.value + '">' + option.label + '</option>'; }).join('');
+  signatureFormat.disabled = true;
+
+  function signingLinkContext() {
+    var params = new URLSearchParams(location.search);
+    return { pagePath: location.pathname, pageToken: params.get('token') || '' };
+  }
+
+  function enablePendingOtp(result) {
+    challengeId = result.challengeId || '';
+    if (!challengeId) return false;
+    otpCode.disabled = false;
+    btnVerifyOtp.disabled = false;
+    btnSendOtp.disabled = true;
+    identityStatus.textContent = '验证码已发送至本人钉钉，请输入6位验证码（剩余约' + Math.max(1, Number(result.expiresIn || 300)) + '秒）。';
+    var resendDelay = Math.max(0, Number(result.resendAfter || 0)) * 1000;
+    setTimeout(function() { if (!identityVerified) btnSendOtp.disabled = false; }, resendDelay);
+    return true;
+  }
+
+  async function restorePendingOtp() {
+    try {
+      var context = signingLinkContext();
+      var response = await fetch('/sign-otp-status', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ empId: EMP.empId, month: EMP.month, documentType: 'result', pagePath: context.pagePath, pageToken: context.pageToken })
+      });
+      var result = await response.json();
+      if (response.ok && result.success && result.active) enablePendingOtp(result);
+    } catch (_) {}
+  }
+
+  btnSendOtp.addEventListener('click', async function() {
+    btnSendOtp.disabled = true;
+    identityStatus.textContent = '正在向本人钉钉发送验证码...';
+    try {
+      var context = signingLinkContext();
+      var response = await fetch('/request-sign-otp', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ empId: EMP.empId, month: EMP.month, documentType: 'result', pagePath: context.pagePath, pageToken: context.pageToken })
+      });
+      var result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || '验证码发送失败');
+      enablePendingOtp(result);
+      otpCode.focus();
+      identityStatus.textContent = result.resumed ? '已恢复此前发送的验证码，请直接输入，无需重复发送。' :
+        (result.delivery && result.delivery.sent ? '验证码已发送至本人钉钉，5分钟内有效。' : '验证码已进入钉钉发送队列，请稍候查看。');
+    } catch (error) {
+      identityStatus.textContent = '发送失败：' + error.message;
+      btnSendOtp.disabled = false;
+    }
+  });
+
+  btnVerifyOtp.addEventListener('click', async function() {
+    if (!/^\d{6}$/.test(otpCode.value.trim())) { identityStatus.textContent = '请输入6位数字验证码。'; return; }
+    btnVerifyOtp.disabled = true;
+    try {
+      var response = await fetch('/verify-sign-otp', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challengeId: challengeId, code: otpCode.value.trim() })
+      });
+      var result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || '身份验证失败');
+      identityVerified = true;
+      verificationToken = result.verificationToken;
+      identityBadge.textContent = '本人钉钉已验证';
+      identityBadge.className = 'identity-badge verified';
+      identityStatus.textContent = '身份验证通过（服务器时间：' + result.verifiedAt + '），请本人手写真实姓名。';
+      otpCode.disabled = true;
+      btnSendOtp.disabled = true;
+      signatureFormat.disabled = false;
+      signatureFormat.value = 'realName';
+      signatureFormat.dispatchEvent(new Event('change'));
+    } catch (error) {
+      identityStatus.textContent = '验证失败：' + error.message;
+      btnVerifyOtp.disabled = false;
+    }
+  });
+
+  otpCode.addEventListener('input', function() {
+    otpCode.value = otpCode.value.replace(/\D/g, '').slice(0, 6);
+  });
+  otpCode.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter' && !btnVerifyOtp.disabled) btnVerifyOtp.click();
+  });
+  restorePendingOtp();
+
+  function selectedOption() {
+    return signatureOptions.find(function(option) { return option.value === signatureFormat.value; }) || null;
+  }
+
+  function resizeCanvas() {
+    var rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = (rect.width - 16) * 2;
+    canvas.height = 280;
+    ctx.strokeStyle = '#111827';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+  }
+
+  resizeCanvas();
+
+  function renderCharacterGuides() {
+    var option = selectedOption();
+    acceptedSignatureText = option ? option.text : '';
+    var characters = Array.from(acceptedSignatureText);
+    sigCharGuides.style.gridTemplateColumns = 'repeat(' + Math.max(characters.length, 1) + ', 1fr)';
+    sigCharGuides.innerHTML = characters.map(function(character, index) { return '<div class="sig-char-guide"><span>' + (index + 1) + ' · ' + character + '</span></div>'; }).join('');
+    placeholder.textContent = option ? '请在每个分字框内手写对应文字' : '请选择签名内容后手写';
+    placeholder.style.display = 'block';
+  }
+
+  function clearHandwriting() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasDrawn = false;
+    drawing = false;
+    pointCount = 0;
+    strokeCount = 0;
+    pathLength = 0;
+    crossSlotStrokeCount = 0;
+    currentStrokeMinX = 0;
+    currentStrokeMaxX = 0;
+    trustedHandwriting = false;
+    latestSignatureMetrics = null;
+    btnConfirm.disabled = true;
+    renderCharacterGuides();
+  }
+
+  function getPos(event) {
+    var rect = canvas.getBoundingClientRect();
+    return { x: (event.clientX - rect.left) * (canvas.width / rect.width), y: (event.clientY - rect.top) * (canvas.height / rect.height) };
+  }
+
+  function calculateMetrics() {
+    var characters = Array.from(acceptedSignatureText);
+    if (!characters.length) return { valid: false, message: '请先选择签名内容。' };
+    var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    var slotWidth = canvas.width / characters.length;
+    var characterMetrics = characters.map(function(character, index) {
+      var inkPixels = 0, minX = canvas.width, maxX = -1, minY = canvas.height, maxY = -1;
+      var startX = Math.floor(index * slotWidth);
+      var endX = Math.min(canvas.width, Math.ceil((index + 1) * slotWidth));
+      for (var y = 0; y < canvas.height; y += 2) {
+        for (var x = startX; x < endX; x += 2) {
+          if (pixels[(y * canvas.width + x) * 4 + 3] > 30) {
+            inkPixels++;
+            minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+          }
+        }
+      }
+      var widthRatio = maxX >= 0 ? (maxX - minX + 1) / slotWidth : 0;
+      var heightRatio = maxY >= 0 ? (maxY - minY + 1) / canvas.height : 0;
+      return { character: character, inkPixels: inkPixels, widthRatio: widthRatio, heightRatio: heightRatio, valid: inkPixels >= 35 && widthRatio >= 0.08 && heightRatio >= 0.10 };
+    });
+    var missingIndex = characterMetrics.findIndex(function(metric) { return !metric.valid; });
+    var minimumStrokes = Math.max(characters.length * 2, 3);
+    var valid = trustedHandwriting && pointCount >= characters.length * 3 && pathLength >= characters.length * 35 &&
+      strokeCount >= minimumStrokes && crossSlotStrokeCount === 0 && missingIndex < 0;
+    return {
+      valid: valid, manuallyDrawn: trustedHandwriting, signatureFormat: signatureFormat.value,
+      expectedCharacterCount: characters.length, pointCount: pointCount, strokeCount: strokeCount,
+      crossSlotStrokeCount: crossSlotStrokeCount, pathLength: Math.round(pathLength), characters: characterMetrics,
+      message: missingIndex >= 0
+        ? '第' + (missingIndex + 1) + '字“' + characters[missingIndex] + '”笔迹不足或不清晰，请逐字重写。'
+        : (crossSlotStrokeCount > 0
+          ? '检测到跨字连写，请每个字在独立分字框内用楷体逐字书写。'
+          : (strokeCount < minimumStrokes
+            ? '笔画数量过少，请用楷体逐字完整书写真实姓名。'
+            : (valid ? '手写签名验证通过：内容完整、逐字清晰。' : '笔迹过少或不够清晰，请用楷体逐字完整书写。')))
+    };
+  }
+
+  function updateHandwritingValidation() {
+    latestSignatureMetrics = calculateMetrics();
+    hasDrawn = latestSignatureMetrics.valid;
+    signatureValidation.textContent = latestSignatureMetrics.message;
+    signatureValidation.className = 'sig-validation ' + (hasDrawn ? 'valid' : 'invalid');
+    btnConfirm.disabled = !hasDrawn || !identityVerified;
+  }
+
+  canvas.addEventListener('pointerdown', function(event) {
+    if (!identityVerified) {
+      signatureValidation.textContent = '请先完成本人钉钉身份验证。';
+      signatureValidation.className = 'sig-validation invalid';
+      return;
+    }
+    if (!selectedOption()) {
+      signatureValidation.textContent = '请先选择签名内容。';
+      signatureValidation.className = 'sig-validation invalid';
+      return;
+    }
+    event.preventDefault(); drawing = true; trustedHandwriting = trustedHandwriting || event.isTrusted; strokeCount++;
+    var pos = getPos(event); lastX = pos.x; lastY = pos.y; currentStrokeMinX = pos.x; currentStrokeMaxX = pos.x; ctx.beginPath(); ctx.moveTo(lastX, lastY); placeholder.style.display = 'none';
+    try { canvas.setPointerCapture(event.pointerId); } catch (_) {}
+  });
+  canvas.addEventListener('pointermove', function(event) {
+    if (!drawing) return;
+    event.preventDefault(); var pos = getPos(event); ctx.lineTo(pos.x, pos.y); ctx.stroke();
+    pathLength += Math.hypot(pos.x - lastX, pos.y - lastY); pointCount++;
+    currentStrokeMinX = Math.min(currentStrokeMinX, pos.x); currentStrokeMaxX = Math.max(currentStrokeMaxX, pos.x);
+    lastX = pos.x; lastY = pos.y;
+  });
+  function stopDrawing(event) {
+    if (!drawing) return;
+    if (event) event.preventDefault();
+    var characterCount = Math.max(Array.from(acceptedSignatureText).length, 1);
+    var slotWidth = canvas.width / characterCount;
+    var startSlot = Math.floor(Math.max(0, currentStrokeMinX) / slotWidth);
+    var endSlot = Math.floor(Math.min(canvas.width - 1, currentStrokeMaxX) / slotWidth);
+    if (startSlot !== endSlot) crossSlotStrokeCount++;
+    drawing = false;
+    updateHandwritingValidation();
+  }
+  canvas.addEventListener('pointerup', stopDrawing);
+  canvas.addEventListener('pointercancel', stopDrawing);
+  signatureFormat.addEventListener('change', function() {
+    clearHandwriting();
+    signatureValidation.textContent = selectedOption() ? '请按分字框逐字手写，系统将自动检查完整度和清晰度。' : '请先选择签名内容，再按分字框逐字手写。';
+    signatureValidation.className = 'sig-validation';
+  });
+  renderCharacterGuides();
+
+  btnClear.addEventListener('click', function() {
+    clearHandwriting();
+    confirmResult.style.display = 'none';
+    signatureValidation.textContent = '已清除，请重新逐字手写。';
+    signatureValidation.className = 'sig-validation';
+  });
+
+  function generateResultHTML(sigDataUrl, timeStr, signatureText) {
+    var rowsHtml = '';
+    for (var i = 0; i < KPIS.length; i++) {
+      var k = KPIS[i];
+      rowsHtml += '<tr><td style="text-align:center;vertical-align:middle">' + k.seq + '</td><td>' + resultKpiIndicator(k) + '</td><td>' + resultKpiRule(k) + '</td><td>' + resultKpiSource(k) + '</td><td class="weight">' + k.max + '%</td>'
+        + '<td class="completion">' + escapeResultHtml(k.completion || '--') + '</td>'
+        + '<td class="score self">' + k.selfScore + '</td>'
+        + '<td class="score mgr">' + resultScoreWithRemark(k.mgrScore, k.mgrRemark, '上级备注') + '</td>'
+        + '<td class="score bp">' + resultScoreWithRemark(k.bpScore, k.bpRemark, 'BP备注') + '</td></tr>';
+    }
+    return '<!DOCTYPE html>\n<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">\n'
+      + '<title>绩效结果确认书 - ' + EMP.name + ' - ' + EMP.month + '</title>\n'
+      + '<style>\n'
+      + 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:24px;max-width:1360px;margin:0 auto;color:#1a1a1a;background:#fff}\n'
+      + 'h1{font-size:18px;text-align:center;margin-bottom:4px;color:#16a34a}\n'
+      + '.sub{text-align:center;font-size:13px;color:#666;margin-bottom:20px}\n'
+      + '.info{display:flex;justify-content:space-between;padding:12px 16px;background:#f0fdf4;border-radius:8px;margin-bottom:16px;font-size:14px;border:1px solid #bbf7d0}\n'
+      + '.table-wrap{width:100%;overflow-x:auto;border:1px solid #dcfce7;border-radius:10px;margin-bottom:20px}\n'
+      + 'table{width:100%;min-width:1240px;table-layout:fixed;border-collapse:collapse;font-size:13px}\n'
+      + 'th{background:#f0fdf4;color:#16a34a;font-weight:600;padding:10px;text-align:left;border-bottom:2px solid #bbf7d0}\n'
+      + 'td{padding:12px 10px;border-bottom:1px solid #eee;vertical-align:top;line-height:1.6}\n'
+      + '.weight{text-align:center;vertical-align:middle;color:#16a34a;font-weight:700}.completion{vertical-align:middle;color:#166534;background:#f0fdf4;white-space:pre-line}.score{text-align:center;vertical-align:middle;font-weight:700;font-size:15px}.score.self{color:#2563eb}.score.mgr{color:#7c3aed}.score.bp{color:#059669}\n'
+      + '.indicator-main{font-weight:700;color:#0f172a}.combo-label{margin-top:4px;color:#2563eb;font-size:11px}.subcell-list{display:grid;gap:6px;margin-top:7px}.subcell-item{padding:7px 8px;background:#f8fafc;border-left:3px solid #93c5fd;border-radius:5px;color:#475569;white-space:pre-line;overflow-wrap:anywhere}.source-value{color:#334155;overflow-wrap:anywhere}\n'
+      + '.result{text-align:center;margin:20px 0;padding:20px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px}\n'
+      + '.result .score{font-size:42px;font-weight:800;color:#16a34a}\n'
+      + '.result .label{font-size:13px;color:#666;margin-top:4px}\n'
+      + '.result .detail{display:flex;justify-content:center;gap:24px;margin-top:12px}\n'
+      + '.result .detail span{font-weight:600}\n'
+      + '.score-note{margin-top:4px;color:#64748b;font-size:11px;font-weight:400;line-height:1.45;white-space:pre-wrap;text-align:left}\n'
+      + '.sig-area{text-align:center;margin-top:20px;padding:16px;border-top:2px solid #e5e7eb}\n'
+      + '.sig-area img{max-width:280px;height:auto;border:1px solid #e5e7eb;border-radius:8px;background:#fafbfc;padding:4px}\n'
+      + '.signature-text{font-size:13px;color:#64748b;margin-top:8px}\n'
+      + '.workflow-reminder-grid{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(0,1.35fr);gap:14px;margin:20px 0;align-items:stretch}\n'
+      + '.rating-guide,.attendance-note{margin:0;padding:15px 17px;border-radius:11px;font-size:12px;line-height:1.7}.rating-guide{background:#f8fafc;border:1px solid #dbe3ee;color:#334155}\n'
+      + '.rating-guide-title,.attendance-note-title{font-size:14px;font-weight:700;margin-bottom:8px;color:#0f172a}.attendance-note-title{color:#9a3412}.rating-guide-list{display:grid}\n'
+      + '.rating-guide-row{display:grid;grid-template-columns:42px minmax(68px,1fr) auto;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid #e8edf3}.rating-guide-row:last-child{border-bottom:0}\n'
+      + '.grade-chip{display:inline-flex;justify-content:center;align-items:center;min-width:34px;padding:1px 8px;border-radius:999px;font-weight:700;border:1px solid}.grade-a{color:#059669;background:#ecfdf5;border-color:#6ee7b7}.grade-b-plus{color:#2563eb;background:#eff6ff;border-color:#bfdbfe}.grade-b{color:#7c3aed;background:#f5f3ff;border-color:#ddd6fe}.grade-b-minus{color:#d97706;background:#fffbeb;border-color:#fde68a}.grade-c{color:#ea580c;background:#fff7ed;border-color:#fed7aa}.grade-d{color:#dc2626;background:#fef2f2;border-color:#fecaca}\n'
+      + '.rating-threshold{color:#64748b;text-align:right;white-space:nowrap}.attendance-note{background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12}\n'
+      + '.dispute-reminder{margin:12px 0 0;padding:14px 16px;background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;color:#9f1239;font-size:13px;line-height:1.75}.dispute-reminder strong{color:#881337}\n'
+      + '.time{font-size:12px;color:#666;margin-top:10px}\n'
+      + '.stamp{text-align:center;margin-top:16px;padding:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;color:#166534;font-size:13px}\n'
+      + '.footer{text-align:center;margin-top:24px;font-size:11px;color:#bbb;border-top:1px solid #f0f0f0;padding-top:12px}\n'
+      + '@media(max-width:820px){.workflow-reminder-grid{grid-template-columns:1fr}.rating-guide-row{grid-template-columns:42px 1fr auto}}@media(max-width:760px){body{padding:8px}}\n'
+      + '</style></head><body>\n'
+      + '<h1>绩效结果确认书</h1>\n'
+      + '<div class="sub">杭州飞途行远 · ' + EMP.month + '</div>\n'
+      + '<div class="info"><div><strong>' + EMP.name + '（' + EMP.realName + '）</strong><br><span style="color:#666;font-size:13px">' + EMP.dept + ' · ' + EMP.position + '</span></div><div style="text-align:right"><span style="font-size:12px;color:#999">直属上级</span><br><strong>' + EMP.directMgr + '</strong></div></div>\n'
+      + '<div class="table-wrap"><table><thead><tr><th style="width:44px;text-align:center">#</th><th style="width:170px">考核指标</th><th>评分细则</th><th style="width:160px">数据来源</th><th style="width:72px;text-align:center">权重</th><th style="width:180px">实际完成情况</th><th style="width:82px;text-align:center">员工自评</th><th style="width:82px;text-align:center">上级评分</th><th style="width:82px;text-align:center">BP核准</th></tr></thead>\n'
+      + '<tbody>' + rowsHtml + '</tbody>\n'
+      + '<tfoot><tr style="background:#f8faf8;font-weight:600"><td colspan="4">合计</td><td class="weight">100%</td><td></td><td class="score self">' + SELF_TOTAL + '</td><td class="score mgr">' + MGR_TOTAL + '</td><td class="score bp">' + BP_TOTAL + '</td></tr></tfoot></table></div>\n'
+      + '<div class="result"><div class="score">' + FINAL_SCORE + '</div><div class="label">最终绩效得分</div><div class="detail"><span>等级：' + GRADE + '</span><span>系数：' + COEFF + '</span></div></div>\n'
+      + '<div class="workflow-reminder-grid"><section class="rating-guide"><div class="rating-guide-title">评分标准</div><div class="rating-guide-list">'
+      + '<div class="rating-guide-row"><div><span class="grade-chip grade-a">A-</span></div><div>优秀</div><div class="rating-threshold">X＞110 · 系数1.2</div></div>'
+      + '<div class="rating-guide-row"><div><span class="grade-chip grade-b-plus">B+</span></div><div>优良</div><div class="rating-threshold">100＜X≤110 · 系数1.1</div></div>'
+      + '<div class="rating-guide-row"><div><span class="grade-chip grade-b">B</span></div><div>良好</div><div class="rating-threshold">90＜X≤100 · 系数1.0</div></div>'
+      + '<div class="rating-guide-row"><div><span class="grade-chip grade-b-minus">B-</span></div><div>合格</div><div class="rating-threshold">80＜X≤90 · 系数0.9</div></div>'
+      + '<div class="rating-guide-row"><div><span class="grade-chip grade-c">C</span></div><div>需改进</div><div class="rating-threshold">70＜X≤80 · 系数0.7</div></div>'
+      + '<div class="rating-guide-row"><div><span class="grade-chip grade-d">D</span></div><div>不合格</div><div class="rating-threshold">X≤70 · 系数0</div></div>'
+      + '</div></section><section class="attendance-note"><div class="attendance-note-title">备注</div>当月缺勤（当月实际出勤天数＜当月应出勤天数，含各类请假及入离职）：<br>（1）入离职人员：当月绩效奖金按实际出勤天数及绩效评分进行核算。<br>（2）5天＜当月缺勤＜10天：绩效奖金按实际出勤天数及绩效评分进行核算。<br>（3）当月缺勤≥10天：不核发当月绩效奖金。</section></div>\n'
+      + '<div class="dispute-reminder"><strong>绩效异议提醒：</strong>绩效如有异议，请于收到绩效2日内联系BP进行校准，逾期未反馈的，视为对绩效结果的认可，不再受理异议申请。</div>\n'
+      + '<p style="font-size:13px;color:#666;margin-bottom:8px">本人签名确认已阅读并知悉以上绩效评估结果，同意此评定结果。</p>\n'
+      + '<div class="sig-area"><img src="' + sigDataUrl + '" alt="员工手写签名"><div class="signature-text">已验证手写内容：' + signatureText + '</div><div class="time">确认时间：' + timeStr + '</div></div>\n'
+      + '<div class="stamp">✓ 员工已于 ' + timeStr + ' 签字确认</div>\n'
+      + '<div class="footer">杭州飞途行远 · 绩效管理系统 · 本确认书由系统生成</div>\n'
+      + '</body></html>';
+  }
+
+  btnConfirm.addEventListener('click', async function() {
+    var validation = calculateMetrics();
+    latestSignatureMetrics = validation;
+    if (!identityVerified || !verificationToken) {
+      signatureValidation.textContent = '本人钉钉身份验证未完成或已失效。';
+      signatureValidation.className = 'sig-validation invalid';
+      return;
+    }
+    if (!hasDrawn || !validation.valid || !acceptedSignatureText || !signatureFormat.value) {
+      signatureValidation.textContent = validation.message || '签名不符合规范，不能提交。';
+      signatureValidation.className = 'sig-validation invalid';
+      return;
+    }
+    var now = new Date();
+    var timeStr = now.getFullYear() + '-' +
+      String(now.getMonth()+1).padStart(2,'0') + '-' +
+      String(now.getDate()).padStart(2,'0') + ' ' +
+      String(now.getHours()).padStart(2,'0') + ':' +
+      String(now.getMinutes()).padStart(2,'0') + ':' +
+      String(now.getSeconds()).padStart(2,'0');
+
+    btnConfirm.disabled = true;
+    btnConfirm.textContent = '验证并提交中...';
+    btnClear.textContent = '重新签名';
+
+    var sigDataUrl = canvas.toDataURL('image/png');
+    var htmlContent = generateResultHTML(sigDataUrl, timeStr, acceptedSignatureText);
+
+    // POST to server
+    try {
+      var resp = await fetch('/submit-result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          empId: EMP.empId,
+          name: EMP.name,
+          realName: EMP.realName,
+          dept: EMP.dept,
+          position: EMP.position,
+          month: EMP.month,
+          signedAt: timeStr,
+          signatureText: acceptedSignatureText,
+          signatureFormat: signatureFormat.value,
+          signatureStyle: '手写楷体',
+          signatureMetrics: latestSignatureMetrics,
+          verificationToken: verificationToken,
+          sigData: sigDataUrl,
+          finalScore: FINAL_SCORE,
+          grade: GRADE,
+          coeff: COEFF,
+          doc: htmlContent
+        })
+      });
+      var responseText = await resp.text();
+      var result = {};
+      try { result = JSON.parse(responseText); } catch (_) { result = { error: responseText }; }
+      if (!resp.ok || !result.success || !result.pendingBpReview) throw new Error(result.error || ('HTTP ' + resp.status));
+      confirmTime.textContent = '确认时间：' + timeStr;
+      confirmMsg.textContent = '签名验证通过，已通知BP复核；BP核对无误后将正式归档。';
+      btnConfirm.textContent = '已提交';
+      console.log('绩效结果确认书已提交BP复核：' + (result.bpReviewer || 'BP'));
+    } catch(e) {
+      confirmMsg.textContent = '签名验证或提交失败：' + e.message;
+      btnConfirm.disabled = false;
+      btnConfirm.textContent = '确认签名';
+      console.warn('提交归档失败:', e);
+    }
+
+    confirmResult.style.display = 'block';
+    confirmResult.scrollIntoView({ behavior: 'smooth' });
+  });
+})();
+</script>
+</body>
+</html>
