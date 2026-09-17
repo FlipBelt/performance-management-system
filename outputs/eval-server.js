@@ -137,6 +137,9 @@ const PERFORMANCE_EXCLUSIONS_FILE = dataFile('performance_exclusions.json', []);
 const ASSESSMENT_ROSTER_FILE = dataFile('assessment_roster.json', []);
 const ADMIN_DINGTALK_BINDING_FILE = dataFile('admin_dingtalk_binding.json', {});
 const MONTHLY_EVENTS_FILE = dataFile('monthly_events.json', {});
+const OPERATION_AUDIT_FILE = path.join(DATA_DIR, 'operation_audit.jsonl');
+if (!fs.existsSync(OPERATION_AUDIT_FILE)) fs.writeFileSync(OPERATION_AUDIT_FILE, '', { encoding: 'utf8', mode: 0o640 });
+try { fs.chmodSync(OPERATION_AUDIT_FILE, 0o640); } catch (_) {}
 const DEFAULT_EMPLOYEE_OVERRIDES = {
   '口蘑': { department: '采购仓储部', directMgr: '球球' },
   '卢卡': { department: '采购仓储部', directMgr: '球球' },
@@ -264,6 +267,10 @@ function canScoreAsBp(profile) {
 }
 
 function canInitiateTargetAdjustment(profile) {
+  return Boolean(profile && profile.authorized && GLOBAL_ADMIN_NAMES.has(String(profile.name || '').trim()));
+}
+
+function canViewOperationLogs(profile) {
   return Boolean(profile && profile.authorized && GLOBAL_ADMIN_NAMES.has(String(profile.name || '').trim()));
 }
 
@@ -1895,10 +1902,14 @@ function workflowReminderContext(empId, month) {
 }
 
 function readBody(req) {
+  if (Object.prototype.hasOwnProperty.call(req, '_cachedBody')) return Promise.resolve(req._cachedBody);
   return new Promise((resolve) => {
     let body = '';
     req.on('data', chunk => body += chunk);
-    req.on('end', () => resolve(body));
+    req.on('end', () => {
+      req._cachedBody = body;
+      resolve(body);
+    });
   });
 }
 
@@ -2336,6 +2347,174 @@ function requestIp(req) {
   const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
   return forwarded || String(req.headers['x-real-ip'] || '').trim() ||
     String((req.socket && req.socket.remoteAddress) || '').replace(/^::ffff:/, '') || 'unknown';
+}
+
+const OPERATION_ACTIONS = Object.freeze({
+  '/admin-login': ['账号安全', '登录系统'],
+  '/dingtalk-admin-login': ['账号安全', '钉钉登录尝试'],
+  '/monthly-events': ['每月事件', '维护每月事件'],
+  '/request-target-adjustment': ['KPI目标', '发起目标调整'],
+  '/invite-target-draft': ['KPI目标', '邀请员工填写目标'],
+  '/withdraw-target-invitation': ['KPI目标', '撤回目标邀请'],
+  '/submit-target-draft': ['KPI目标', '员工提交目标'],
+  '/adjust-target-review': ['KPI目标', '审批人调整目标'],
+  '/review-target-manager': ['KPI目标', '直属上级审核目标'],
+  '/review-target-draft': ['KPI目标', 'BP审核目标'],
+  '/generate-kpi-pages': ['KPI目标', '批量发起目标流程'],
+  '/submit': ['绩效结果', '员工提交自评'],
+  '/submit-mgr': ['绩效结果', '直属上级提交评分'],
+  '/submit-bp': ['绩效结果', 'BP提交核准评分'],
+  '/submit-kpi': ['签字归档', '员工签署KPI目标'],
+  '/submit-result': ['签字归档', '员工签署绩效结果'],
+  '/review-result-bp': ['签字归档', 'BP复核绩效结果'],
+  '/reject-signature': ['签字归档', '退回签字文件'],
+  '/request-sign-otp': ['身份验证', '发送签字验证码'],
+  '/verify-sign-otp': ['身份验证', '验证签字验证码'],
+  '/sign-otp-status': ['身份验证', '查询签字验证状态'],
+  '/workflow-resets': ['流程管理', '调整流程状态'],
+  '/workflow-reminder': ['流程通知', '催办当前流程'],
+  '/oa-approval-retry': ['流程通知', '重试OA审批'],
+  '/send-bot-msg': ['流程通知', '发送钉钉通知'],
+  '/send-bot-batch': ['流程通知', '批量发送钉钉通知'],
+  '/employee-overrides': ['组织管理', '调整员工组织关系'],
+  '/performance-exclusions': ['组织管理', '调整绩效参与范围'],
+  '/admin-dingtalk-bind': ['账号安全', '绑定管理员钉钉'],
+  '/okr-invite': ['OKR', '邀请员工填写OKR'],
+  '/okr-remind': ['OKR', '催办OKR流程'],
+  '/okr-send-self-review': ['OKR', '发送OKR结果填写'],
+  '/okr-sign-otp': ['身份验证', '发送OKR签字验证码'],
+  '/okr-sign-verify': ['身份验证', '验证OKR签字验证码'],
+  '/okr-action': ['OKR', '办理OKR流程']
+});
+
+function operationAuditTailHash() {
+  try {
+    const lines = fs.readFileSync(OPERATION_AUDIT_FILE, 'utf8').split(/\r?\n/).filter(Boolean);
+    if (!lines.length) return '';
+    return String(JSON.parse(lines[lines.length - 1]).eventHash || '');
+  } catch (_) { return ''; }
+}
+
+let lastOperationAuditHash = operationAuditTailHash();
+
+function shouldAuditOperation(method, pathname) {
+  return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(String(method || '').toUpperCase()) || pathname === '/admin-logout';
+}
+
+function parseOperationPayload(req) {
+  const body = String(req._cachedBody || '');
+  if (!body) return {};
+  try {
+    const parsed = JSON.parse(body);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch (_) {
+    try { return Object.fromEntries(new URLSearchParams(body)); } catch (_) { return {}; }
+  }
+}
+
+function operationEmployeeIdentity(empId) {
+  empId = String(empId || '').trim();
+  if (!empId) return null;
+  return dashboardEmployeeIdentities()[empId] || null;
+}
+
+function safeOperationDetails(payload) {
+  const details = {};
+  const safeKeys = ['action', 'empId', 'month', 'role', 'status', 'type', 'department', 'name', 'id'];
+  for (const key of safeKeys) {
+    const value = payload && payload[key];
+    if (['string', 'number', 'boolean'].includes(typeof value) && String(value).length <= 300) details[key] = value;
+  }
+  for (const key of ['pages', 'messages', 'excludedEmpIds', 'kpis', 'objectives', 'weeklyObjectives', 'completions']) {
+    if (Array.isArray(payload && payload[key])) details[key + 'Count'] = payload[key].length;
+  }
+  return details;
+}
+
+function operationActor(req, pathname, payload) {
+  const sessionProfile = req.accessProfile || readAdminSession(req);
+  if (sessionProfile && sessionProfile.authorized) return { name: sessionProfile.name, role: sessionProfile.role };
+  if (pathname === '/admin-login') return { name: String(payload.username || '未知账号'), role: '登录账号' };
+  const empId = String(payload.empId || payload.employeeId || '').trim();
+  const identity = operationEmployeeIdentity(empId) || {};
+  const employeePaths = new Set(['/submit-target-draft', '/submit', '/submit-kpi', '/submit-result', '/request-sign-otp', '/sign-otp-status', '/okr-sign-otp']);
+  const managerPaths = new Set(['/review-target-manager', '/submit-mgr']);
+  const bpPaths = new Set(['/review-target-draft', '/submit-bp', '/review-result-bp']);
+  if (employeePaths.has(pathname)) return { name: String(identity.name || payload.name || '未识别员工'), role: '员工' };
+  if (managerPaths.has(pathname)) return { name: String(identity.directMgr || '未识别直属上级'), role: '直属上级' };
+  if (bpPaths.has(pathname)) return { name: String(identity.hrbp || '未识别BP'), role: 'BP' };
+  if (pathname === '/adjust-target-review') {
+    const manager = String(payload.role || '') === 'manager';
+    return { name: String(manager ? identity.directMgr : identity.hrbp || '未识别审批人'), role: manager ? '直属上级' : 'BP' };
+  }
+  if (pathname === '/okr-action') {
+    const action = String(payload.action || '');
+    if (action.includes('manager')) return { name: String(identity.directMgr || '未识别直属上级'), role: '直属上级' };
+    if (action.includes('bp')) return { name: String(identity.hrbp || '未识别BP'), role: 'BP' };
+    return { name: String(identity.name || '未识别员工'), role: '员工' };
+  }
+  return { name: '未识别用户', role: '未知' };
+}
+
+function operationTarget(payload) {
+  const empId = String(payload.empId || payload.employeeId || '').trim();
+  const identity = operationEmployeeIdentity(empId);
+  if (identity) return [identity.name, identity.realName, payload.month].filter(Boolean).join(' · ');
+  return [payload.department, payload.name, payload.month, payload.id].filter(value => typeof value === 'string' && value.trim()).join(' · ');
+}
+
+function appendOperationAudit(req, res, pathname) {
+  try {
+    const payload = parseOperationPayload(req);
+    const context = req._operationAuditContext || {};
+    const descriptor = OPERATION_ACTIONS[pathname] || ['系统操作', String(req.method || '') + ' ' + pathname];
+    const actor = context.actor || operationActor(req, pathname, payload);
+    const core = {
+      auditId: crypto.randomUUID(),
+      serverTime: new Date().toISOString(),
+      actorName: String(actor.name || '未识别用户').slice(0, 120),
+      actorRole: String(actor.role || '未知').slice(0, 120),
+      category: String(context.category || descriptor[0]).slice(0, 120),
+      action: String(context.action || descriptor[1]).slice(0, 200),
+      target: String(context.target || operationTarget(payload) || '--').slice(0, 500),
+      method: String(req.method || ''),
+      path: pathname,
+      statusCode: Number(res.statusCode) || 0,
+      success: Number(res.statusCode) >= 200 && Number(res.statusCode) < 400,
+      ipAddress: requestIp(req),
+      userAgent: String(req.headers['user-agent'] || '').slice(0, 500),
+      details: context.details || safeOperationDetails(payload),
+      previousHash: lastOperationAuditHash
+    };
+    const eventHash = sha256(JSON.stringify(core));
+    const record = { ...core, eventHash, serverSeal: hmacSha256(eventHash) };
+    fs.appendFileSync(OPERATION_AUDIT_FILE, JSON.stringify(record) + '\n', { encoding: 'utf8', mode: 0o640 });
+    lastOperationAuditHash = eventHash;
+  } catch (error) {
+    console.error('[operation-audit] Failed to append operation log:', error.message);
+  }
+}
+
+function readOperationAuditEntries(limit) {
+  limit = Math.max(1, Math.min(Number(limit) || 300, 1000));
+  const lines = fs.readFileSync(OPERATION_AUDIT_FILE, 'utf8').split(/\r?\n/).filter(Boolean);
+  return lines.slice(-limit).reverse().map(line => {
+    try {
+      const record = JSON.parse(line);
+      const expectedSeal = hmacSha256(String(record.eventHash || ''));
+      return { ...record, integrityValid: safeTextEqual(record.serverSeal, expectedSeal) };
+    } catch (_) { return null; }
+  }).filter(Boolean);
+}
+
+function monthlyEventAuditSnapshot(event) {
+  if (!event) return null;
+  return {
+    id: event.id, month: event.month, department: event.department, empId: event.empId,
+    name: event.name, realName: event.realName, date: event.date,
+    summary: event.summary, details: event.details,
+    images: (Array.isArray(event.images) ? event.images : []).map(image => ({ name: image.name || '', sha256: sha256(image.dataUrl || '') }))
+  };
 }
 
 function appendSignatureAudit(req, event, details) {
@@ -3047,6 +3226,7 @@ function dashboardAccessContext(profile) {
     canAuthorTargets: Boolean(profile.global),
     canInitiateTargetAdjustment: canInitiateTargetAdjustment(profile),
     canManageMonthlyEvents: canManageMonthlyEvents(profile),
+    canViewOperationLogs: canViewOperationLogs(profile),
     canManageManagerStage: Boolean(profile.authorized),
     canManageTargetBpStage: Boolean(profile.global),
     canManageResultBpStage: canPerformBpResultInBackend(profile)
@@ -3079,7 +3259,7 @@ function buildDashboardHtml(profile) {
   }).filter(employee => employee.name && employee.dept);
   html = html.replace(/const EMPLOYEES = \[[\s\S]*?\n    \];\n\n    const KPIS = \[/,
     'const EMPLOYEES = ' + JSON.stringify(employeeSeed).replace(/</g, '\\u003c') + ';\n\n    const KPIS = [');
-  html = html.replace('const ACCESS_CONTEXT = { name: "系统管理员", role: "全局管理员", global: true, departments: [], canManageOrganization: true, canAuthorTargets: true, canInitiateTargetAdjustment: false, canManageMonthlyEvents: true, canManageManagerStage: true, canManageTargetBpStage: true, canManageResultBpStage: true };',
+  html = html.replace('const ACCESS_CONTEXT = { name: "系统管理员", role: "全局管理员", global: true, departments: [], canManageOrganization: true, canAuthorTargets: true, canInitiateTargetAdjustment: false, canManageMonthlyEvents: true, canViewOperationLogs: false, canManageManagerStage: true, canManageTargetBpStage: true, canManageResultBpStage: true };',
     'const ACCESS_CONTEXT = ' + JSON.stringify(dashboardAccessContext(profile)).replace(/</g, '\\u003c') + ';');
   const versionWatcher = `<script>(()=>{const current=${JSON.stringify(DASHBOARD_BUILD_ID)};let reloading=false;async function check(){if(reloading)return;try{const r=await fetch('/ui-version',{cache:'no-store'});const d=await r.json();if(d.version&&d.version!==current){reloading=true;location.reload();}}catch(_){}}setInterval(check,60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)check();});window.addEventListener('focus',check);})();</script>`;
   html = injectBeforeFinalBody(html, versionWatcher);
@@ -3124,6 +3304,7 @@ function isAdminRoute(method, pathname) {
       pathname === '/kpi-data' || pathname === '/kpi-targets' || pathname === '/target-drafts' || pathname === '/result-data' || pathname === '/queue' ||
       pathname === '/ping' || pathname === '/delivery-status' || pathname === '/pending-count' || pathname === '/workflow-events' ||
       pathname === '/signature-audit' || pathname === '/verify-signature-integrity' ||
+      pathname === '/operation-logs' ||
       pathname === '/workflow-resets' || pathname === '/oa-approval-status' || pathname === '/monthly-events' ||
       pathname === '/employee-roster' || pathname === '/employee-overrides' || pathname === '/performance-exclusions' ||
       pathname === '/archive-view' || pathname.startsWith('/lookup-user/') ||
@@ -3202,6 +3383,9 @@ function startWorkflowEventWatcher() {
 const server = http.createServer(async (req, res) => {
   const requestPath = (req.url || '/').split('?')[0];
   console.log('[req]', req.method, requestPath);
+  if (shouldAuditOperation(req.method, requestPath)) {
+    res.once('finish', () => appendOperationAudit(req, res, requestPath));
+  }
   const requestOrigin = String(req.headers.origin || '');
   let configuredOrigin = '';
   try { configuredOrigin = new URL(PUBLIC_SERVER_URL).origin; } catch (_) {}
@@ -3251,6 +3435,7 @@ const server = http.createServer(async (req, res) => {
     const usernameOk = Boolean(loginProfile.authorized);
     const passwordOk = timingSafeTextEqual(form.get('password'), ADMIN_PASSWORD);
     if (usernameOk && passwordOk) {
+      req.accessProfile = loginProfile;
       ADMIN_LOGIN_FAILURES.delete(remoteAddress);
       const dingTalkAuthCode = String(form.get('dingTalkAuthCode') || '').trim();
       if (dingTalkAuthCode && !adminDingTalkBinding.userId) {
@@ -3287,6 +3472,18 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   if (isAdminRoute(req.method, pathname) && !requireAdmin(req, res, pathname)) return;
+
+  if (req.method === 'GET' && pathname === '/operation-logs') {
+    if (!canViewOperationLogs(req.accessProfile)) {
+      res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({ error: '仅桑葚、薏米、路得、Ben四名管理员可以查看操作日志' }));
+      return;
+    }
+    const limit = new URL(req.url, 'http://localhost').searchParams.get('limit');
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'private, no-store' });
+    res.end(JSON.stringify({ logs: readOperationAuditEntries(limit), appendOnly: true }));
+    return;
+  }
 
   if (req.method === 'GET' && pathname === '/workflow-events') {
     res.writeHead(200, {
@@ -3325,7 +3522,13 @@ const server = http.createServer(async (req, res) => {
       if (String(data.action || '') === 'delete') {
         const id = String(data.id || '').trim();
         if (!id || !monthlyEvents[id]) throw new Error('未找到要删除的每月事件');
-        const month = String(monthlyEvents[id].month || '');
+        const deleting = monthlyEvents[id];
+        const month = String(deleting.month || '');
+        req._operationAuditContext = {
+          category: '每月事件', action: '删除每月事件',
+          target: [deleting.name, deleting.realName, deleting.month, deleting.summary].filter(Boolean).join(' · '),
+          details: { before: monthlyEventAuditSnapshot(deleting) }
+        };
         delete monthlyEvents[id];
         saveMonthlyEvents();
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -3344,6 +3547,11 @@ const server = http.createServer(async (req, res) => {
         createdBy: existing && existing.createdBy || req.accessProfile.name,
         updatedAt: now,
         updatedBy: req.accessProfile.name
+      };
+      req._operationAuditContext = {
+        category: '每月事件', action: existing ? '修改每月事件' : '新增每月事件',
+        target: [normalized.name, normalized.realName, normalized.month, normalized.summary].filter(Boolean).join(' · '),
+        details: { before: monthlyEventAuditSnapshot(existing), after: monthlyEventAuditSnapshot(monthlyEvents[id]) }
       };
       saveMonthlyEvents();
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });

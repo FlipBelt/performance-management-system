@@ -37,6 +37,8 @@
     tr:hover td { background: #f9fafb; }
     .badge { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
     .badge-green { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .badge-red { background: #fff1f2; color: #b42318; border: 1px solid #fecdd3; }
+    .alert-error { padding: 10px 12px; border: 1px solid #fecaca; border-radius: 9px; background: #fff7f7; color: #b42318; }
     .badge-blue { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
     .badge-purple { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
     .badge-amber { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
@@ -555,7 +557,7 @@
 
     const STAGE_COLORS = { "待目标确认": "#d97706", "待自评": "#f59e0b", "待上级评分": "#3b82f6", "待BP核准": "#06b6d4", "待BP归档": "#8b5cf6", "已完成": "#10b981" };
     const STAGE_BADGE = { "待目标确认": "badge-amber", "待自评": "badge-amber", "待上级评分": "badge-blue", "待BP核准": "badge-cyan", "待BP归档": "badge-purple", "已完成": "badge-green" };
-    const ACCESS_CONTEXT = { name: "系统管理员", role: "全局管理员", global: true, departments: [], canManageOrganization: true, canAuthorTargets: true, canInitiateTargetAdjustment: false, canManageMonthlyEvents: true, canManageManagerStage: true, canManageTargetBpStage: true, canManageResultBpStage: true };
+    const ACCESS_CONTEXT = { name: "系统管理员", role: "全局管理员", global: true, departments: [], canManageOrganization: true, canAuthorTargets: true, canInitiateTargetAdjustment: false, canManageMonthlyEvents: true, canViewOperationLogs: false, canManageManagerStage: true, canManageTargetBpStage: true, canManageResultBpStage: true };
     const canAccessDepartment = department => ACCESS_CONTEXT.global || ACCESS_CONTEXT.departments.includes(String(department || '').trim());
 
     const calcWeightedScore = (scores, kpis) => {
@@ -650,6 +652,10 @@
       monthlyEvents: [],
       monthlyEventEditor: null,
       monthlyEventImagePreview: null,
+      operationLogs: [],
+      operationLogLoading: false,
+      operationLogError: '',
+      operationLogFilters: { operator: '全部', category: '全部', result: '全部', keyword: '' },
       confirmedEmps: JSON.parse(localStorage.getItem('perf_confirmedEmps') || '[]').filter(empId => !EXCLUDED_EMPLOYEE_IDS.has(empId) && ACCESSIBLE_EMPLOYEE_IDS.has(empId)),
       showConfirmModal: false,
       confirmModalTab: "target", // "target" or "result"
@@ -1052,7 +1058,7 @@
     }
 
     function renderHeader() {
-      const activeMonth = [state.kanbanMonth, state.empMonth, state.kpiMonth, state.evalMonth][state.activeTab] || DEFAULT_ASSESSMENT_MONTH;
+      const activeMonth = [state.kanbanMonth, state.empMonth, state.kpiMonth, state.evalMonth, '操作审计'][state.activeTab] || DEFAULT_ASSESSMENT_MONTH;
       return `<div class="header"><div class="header-inner">
         <div class="logo">
           <div class="logo-icon" aria-hidden="true">🏆</div>
@@ -1075,13 +1081,14 @@
     }
 
     function renderTabs() {
-      const activeMonth = [state.kanbanMonth, state.empMonth, state.kpiMonth, state.evalMonth][state.activeTab] || DEFAULT_ASSESSMENT_MONTH;
+      const activeMonth = [state.kanbanMonth, state.empMonth, state.kpiMonth, state.evalMonth, '操作审计'][state.activeTab] || DEFAULT_ASSESSMENT_MONTH;
       const tabs = [
         { label: "看板", icon: "⌂" },
         { label: "员工管理", icon: "♙" },
         { label: "KPI目标", icon: "◎" },
         { label: "绩效评估", icon: "◫" }
       ];
+      if (ACCESS_CONTEXT.canViewOperationLogs) tabs.push({ label: "操作日志", icon: "☷" });
       return `<nav class="tabs" aria-label="主导航">
         <div class="sidebar-workspace">
           <div class="sidebar-workspace-label"><span class="sidebar-workspace-mark">⌘</span><span>绩效工作台</span></div>
@@ -1096,15 +1103,72 @@
     }
 
     function renderContent() {
-      const contents = [renderKanban(), renderEmployees(), renderKPI(), renderMergedEval()];
+      const contents = [renderKanban(), renderEmployees(), renderKPI(), renderMergedEval(), renderOperationLogs()];
       const pageMeta = [
         { title: "绩效看板", desc: "掌握考核进度、团队分布与待处理异常", eyebrow: "Performance overview" },
         { title: "员工管理", desc: "维护组织关系、岗位信息与绩效参与范围", eyebrow: "People directory" },
         { title: "KPI目标", desc: "按员工制定考核指标、评分细则与权重", eyebrow: "Goal setting" },
-        { title: "绩效评估", desc: "推进自评、上级评分、BP核准与结果归档", eyebrow: "Evaluation workflow" }
+        { title: "绩效评估", desc: "推进自评、上级评分、BP核准与结果归档", eyebrow: "Evaluation workflow" },
+        { title: "操作日志", desc: "追踪系统内的数据变更、流程办理与登录操作", eyebrow: "Operation audit" }
       ][state.activeTab];
-      const month = [state.kanbanMonth, state.empMonth, state.kpiMonth, state.evalMonth][state.activeTab] || DEFAULT_ASSESSMENT_MONTH;
+      const month = [state.kanbanMonth, state.empMonth, state.kpiMonth, state.evalMonth, '仅4名管理员可查看'][state.activeTab] || DEFAULT_ASSESSMENT_MONTH;
       return `<main class="container"><div class="page-heading"><div><div class="page-eyebrow">${pageMeta.eyebrow}</div><h2>${pageMeta.title}</h2><p>${pageMeta.desc}</p></div><div class="month-chip">● ${escapeHtml(month)}</div></div>${contents[state.activeTab]}</main>`;
+    }
+
+    function renderOperationLogs() {
+      if (!ACCESS_CONTEXT.canViewOperationLogs) return '<div class="card"><div class="card-body">无权查看操作日志</div></div>';
+      const filters = state.operationLogFilters || { operator: '全部', category: '全部', result: '全部', keyword: '' };
+      const logs = Array.isArray(state.operationLogs) ? state.operationLogs : [];
+      const operators = [...new Set(logs.map(log => log.actorName).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+      const categories = [...new Set(logs.map(log => log.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+      const keyword = String(filters.keyword || '').trim().toLowerCase();
+      const visible = logs.filter(log => {
+        if (filters.operator !== '全部' && log.actorName !== filters.operator) return false;
+        if (filters.category !== '全部' && log.category !== filters.category) return false;
+        if (filters.result === '成功' && !log.success) return false;
+        if (filters.result === '失败' && log.success) return false;
+        if (keyword && ![log.actorName, log.actorRole, log.category, log.action, log.target, log.ipAddress].some(value => String(value || '').toLowerCase().includes(keyword))) return false;
+        return true;
+      });
+      const rows = visible.map(log => {
+        const time = log.serverTime ? new Date(log.serverTime).toLocaleString('zh-CN', { hour12: false }) : '--';
+        const detailText = log.details && Object.keys(log.details).length ? JSON.stringify(log.details, null, 2) : '';
+        return `<tr>
+          <td style="white-space:nowrap">${escapeHtml(time)}</td>
+          <td><div class="font-medium text-gray-900">${escapeHtml(log.actorName || '未识别用户')}</div><div class="text-xs text-gray-500">${escapeHtml(log.actorRole || '未知')}</div></td>
+          <td><span class="badge badge-gray">${escapeHtml(log.category || '系统操作')}</span><div class="font-medium text-gray-900 mt-1">${escapeHtml(log.action || '--')}</div></td>
+          <td style="max-width:360px;word-break:break-word">${escapeHtml(log.target || '--')}${detailText ? `<details style="margin-top:6px"><summary style="cursor:pointer;color:#0f766e;font-size:12px">查看变更摘要</summary><pre style="margin-top:6px;padding:8px;max-height:260px;overflow:auto;white-space:pre-wrap;background:#f8faf9;border-radius:8px;font:11px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace">${escapeHtml(detailText)}</pre></details>` : ''}</td>
+          <td><span class="badge ${log.success ? 'badge-green' : 'badge-red'}">${log.success ? '成功' : '失败'} · ${escapeHtml(log.statusCode)}</span><div class="text-xs text-gray-500 mt-1">${log.integrityValid === false ? '完整性校验异常' : '完整性已校验'}</div></td>
+          <td><div class="text-xs text-gray-600">${escapeHtml(log.ipAddress || '--')}</div><div class="text-xs text-gray-400 mt-1" title="${escapeHtml(log.userAgent || '')}">${escapeHtml(String(log.userAgent || '').slice(0, 38))}${String(log.userAgent || '').length > 38 ? '…' : ''}</div></td>
+        </tr>`;
+      }).join('');
+      return `<div class="card"><div class="card-body" style="padding:16px">
+        <div class="flex items-center justify-between gap-3 flex-wrap"><div><div class="font-medium text-gray-900">操作日志 <span class="badge badge-gray">${visible.length}/${logs.length}</span></div><div class="text-xs text-gray-500 mt-1">日志从本功能上线后开始记录，采用追加写入并进行完整性校验；密码、验证码、令牌和签名内容不会写入日志。</div></div><button type="button" class="btn btn-secondary btn-sm" data-refresh-operation-logs ${state.operationLogLoading ? 'disabled' : ''}>⟳ ${state.operationLogLoading ? '加载中' : '刷新日志'}</button></div>
+        <div class="flex gap-2 flex-wrap" style="margin-top:14px">
+          <select class="input" data-operation-filter="operator" style="width:auto;min-width:150px"><option>全部</option>${operators.map(value => `<option value="${escapeHtml(value)}" ${filters.operator === value ? 'selected' : ''}>${escapeHtml(value)}</option>`).join('')}</select>
+          <select class="input" data-operation-filter="category" style="width:auto;min-width:150px"><option>全部</option>${categories.map(value => `<option value="${escapeHtml(value)}" ${filters.category === value ? 'selected' : ''}>${escapeHtml(value)}</option>`).join('')}</select>
+          <select class="input" data-operation-filter="result" style="width:auto;min-width:120px"><option>全部</option><option ${filters.result === '成功' ? 'selected' : ''}>成功</option><option ${filters.result === '失败' ? 'selected' : ''}>失败</option></select>
+          <input class="input" data-operation-search value="${escapeHtml(filters.keyword || '')}" placeholder="搜索人员、操作、对象或IP" style="min-width:260px;flex:1">
+        </div>
+        ${state.operationLogError ? `<div class="alert alert-error" style="margin-top:12px">${escapeHtml(state.operationLogError)}</div>` : ''}
+        <div style="overflow:auto;margin-top:14px;border:1px solid #e5ebe7;border-radius:10px"><table style="min-width:1120px;width:100%;font-size:13px"><thead><tr><th>时间</th><th>操作人</th><th>操作</th><th>操作对象／变更摘要</th><th>结果</th><th>来源</th></tr></thead><tbody>${rows || '<tr><td colspan="6" style="text-align:center;padding:36px;color:#94a3b8">暂无符合条件的操作日志</td></tr>'}</tbody></table></div>
+      </div></div>`;
+    }
+
+    async function refreshOperationLogs() {
+      if (!ACCESS_CONTEXT.canViewOperationLogs) return;
+      state.operationLogLoading = true;
+      state.operationLogError = '';
+      try {
+        const response = await fetch(SYNC_SERVER_URL + '/operation-logs?limit=500', { cache: 'no-store' });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || '操作日志加载失败');
+        state.operationLogs = Array.isArray(result.logs) ? result.logs : [];
+      } catch (error) {
+        state.operationLogError = error.message;
+      } finally {
+        state.operationLogLoading = false;
+      }
     }
 
     function renderKanban() {
@@ -2570,8 +2634,27 @@
           state.selectedEmp = null;
           state.sendStatus = null; // dismiss banner on tab switch
           render();
+          if (state.activeTab === 4 && ACCESS_CONTEXT.canViewOperationLogs) {
+            await refreshOperationLogs();
+            render();
+          }
         });
       });
+
+      document.querySelectorAll('[data-refresh-operation-logs]').forEach(button => button.addEventListener('click', async () => {
+        await refreshOperationLogs();
+        render();
+      }));
+      document.querySelectorAll('[data-operation-filter]').forEach(field => field.addEventListener('change', () => {
+        state.operationLogFilters[field.dataset.operationFilter] = field.value;
+        render();
+      }));
+      document.querySelectorAll('[data-operation-search]').forEach(field => field.addEventListener('input', () => {
+        state.operationLogFilters.keyword = field.value;
+        render();
+        const next = document.querySelector('[data-operation-search]');
+        if (next) { next.focus(); next.setSelectionRange(next.value.length, next.value.length); }
+      }));
 
       const globalSearch = document.querySelector('[data-global-search]');
       if (globalSearch) {

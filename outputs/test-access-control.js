@@ -65,7 +65,7 @@ assert.equal(canAccessDepartment(hj, '营销中心'), true, 'legacy department l
 assert.deepEqual(dashboardAccessContext(qq), {
   name: '球球', role: '跨部门负责人', global: false,
   departments: ['客户运营部', '采购仓储部', '产品设计'], canManageOrganization: false,
-  canAuthorTargets: false, canInitiateTargetAdjustment: false, canManageMonthlyEvents: false, canManageManagerStage: true,
+  canAuthorTargets: false, canInitiateTargetAdjustment: false, canManageMonthlyEvents: false, canViewOperationLogs: false, canManageManagerStage: true,
   canManageTargetBpStage: false, canManageResultBpStage: false
 });
 
